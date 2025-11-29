@@ -1,8 +1,15 @@
 import asyncio
 from enum import IntEnum
-import pyautogui
-import pygetwindow as gw
 from typing import Any
+
+# Lazy imports to avoid DISPLAY dependency in headless CI environments
+def _get_pyautogui():
+    import pyautogui
+    return pyautogui
+
+def _get_pygetwindow():
+    import pygetwindow as gw
+    return gw
 
 
 class Key(IntEnum):
@@ -187,7 +194,7 @@ class WindowHandler:
             key_name = key
 
         # Run in thread pool to avoid blocking
-        await asyncio.to_thread(pyautogui.press, key_name)
+        await asyncio.to_thread(_get_pyautogui().press, key_name)
 
     async def press_key(self, key: Key) -> None:
         """Press a key."""
@@ -195,14 +202,15 @@ class WindowHandler:
 
     async def mouse_move(self, x: int, y: int) -> None:
         """Move mouse to coordinates."""
-        await asyncio.to_thread(pyautogui.moveTo, x, y)
+        await asyncio.to_thread(_get_pyautogui().moveTo, x, y)
 
     async def mouse_left_click(self) -> None:
         """Perform left mouse click."""
-        await asyncio.to_thread(pyautogui.click)
+        await asyncio.to_thread(_get_pyautogui().click)
 
     async def focus_client_window(self, window_title: str, retry: int = 10) -> None:
         """Focus a window by title."""
+        gw = _get_pygetwindow()
         windows = gw.getWindowsWithTitle(window_title)
 
         if not windows:
