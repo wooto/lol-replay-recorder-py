@@ -175,7 +175,145 @@ FilePath = str
 LogLevel = str
 
 
+# Live Game Data Types - Critical for real-time game data capture
+
+class ActivePlayer(TypedDict):
+    """Active player in the game"""
+    error: str
+
+
+class Item(TypedDict):
+    """Item information for a player"""
+    canUse: bool
+    consumable: bool
+    count: int
+    displayName: str
+    itemID: int
+    price: int
+    rawDescription: str
+    rawDisplayName: str
+    slot: int
+
+
+class Keystone(TypedDict):
+    """Keystone rune information"""
+    displayName: str
+    id: int
+    rawDescription: str
+    rawDisplayName: str
+
+
+class RuneTree(TypedDict):
+    """Rune tree information"""
+    displayName: str
+    id: int
+    rawDescription: str
+    rawDisplayName: str
+
+
+class Runes(TypedDict):
+    """Player rune configuration"""
+    keystone: Keystone
+    primaryRuneTree: RuneTree
+    secondaryRuneTree: RuneTree
+
+
+class Scores(TypedDict):
+    """Player score statistics"""
+    assists: int
+    creepScore: int
+    deaths: int
+    kills: int
+    wardScore: int
+
+
+class SummonerSpell(TypedDict):
+    """Summoner spell information"""
+    displayName: str
+    rawDescription: str
+    rawDisplayName: str
+
+
+class SummonerSpells(TypedDict):
+    """Player summoner spells"""
+    summonerSpellOne: SummonerSpell
+    summonerSpellTwo: SummonerSpell
+
+
+class Player(TypedDict):
+    """Complete player information for live game"""
+    championName: str
+    isBot: bool
+    isDead: bool
+    items: List[Item]
+    level: int
+    riotIdGameName: str
+    position: str
+    rawChampionName: str
+    rawSkinName: str
+    respawnTimer: int
+    runes: Runes
+    scores: Scores
+    screenPositionBottom: str
+    screenPositionCenter: str
+    skinID: int
+    skinName: str
+    summonerName: str
+    summonerSpells: SummonerSpells
+    team: str
+
+
+class Event(TypedDict):
+    """Game event information"""
+    EventID: int
+    EventName: str
+    EventTime: int
+    Assisters: NotRequired[List[str]]
+    KillerName: NotRequired[str]
+    VictimName: NotRequired[str]
+    KillStreak: NotRequired[int]
+
+
+class Events(TypedDict):
+    """Collection of game events"""
+    Events: List[Event]
+
+
+class GameDetails(TypedDict):
+    """Live game details"""
+    gameMode: str
+    gameTime: int
+    mapName: str
+    mapNumber: int
+    mapTerrain: str
+
+
+class LiveGameData(TypedDict):
+    """Complete live game data structure"""
+    activePlayer: ActivePlayer
+    allPlayers: List[Player]
+    events: Events
+    gameData: GameDetails
+
+
+# Additional utility types from TypeScript
+class Vector3(TypedDict):
+    """3D vector coordinates"""
+    x: float
+    y: float
+    z: float
+
+
+class ColorRGBA(TypedDict):
+    """RGBA color values"""
+    r: float
+    g: float
+    b: float
+    a: float
+
+
 # Union types for flexible input
 RecordingInput = Union[str, int, RecordingProperties]
 RenderInput = Union[str, RenderProperties]
 GameInput = Union[str, int, GameData]
+LiveGameInput = Union[str, LiveGameData]

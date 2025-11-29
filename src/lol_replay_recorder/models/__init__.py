@@ -15,6 +15,24 @@ from .replay_type import (
     PlayerInfo,
     TeamInfo,
     EventData,
+    # Live Game Data Types
+    ActivePlayer,
+    Item,
+    Keystone,
+    RuneTree,
+    Runes,
+    Scores,
+    SummonerSpell,
+    SummonerSpells,
+    Player,
+    Event,
+    Events,
+    GameDetails,
+    LiveGameData,
+    # Utility types
+    Vector3,
+    ColorRGBA,
+    # Type aliases
     ReplayID,
     PlatformID,
     GameVersion,
@@ -23,9 +41,11 @@ from .replay_type import (
     Resolution,
     FilePath,
     LogLevel,
+    # Union types
     RecordingInput,
     RenderInput,
     GameInput,
+    LiveGameInput,
 )
 from .riot_request import make_request
 from .lcu_request import make_lcu_request, read_lockfile
@@ -49,6 +69,24 @@ __all__ = [
     "PlayerInfo",
     "TeamInfo",
     "EventData",
+    # Live Game Data Types
+    "ActivePlayer",
+    "Item",
+    "Keystone",
+    "RuneTree",
+    "Runes",
+    "Scores",
+    "SummonerSpell",
+    "SummonerSpells",
+    "Player",
+    "Event",
+    "Events",
+    "GameDetails",
+    "LiveGameData",
+    # Utility types
+    "Vector3",
+    "ColorRGBA",
+    # Type aliases
     "ReplayID",
     "PlatformID",
     "GameVersion",
@@ -57,9 +95,12 @@ __all__ = [
     "Resolution",
     "FilePath",
     "LogLevel",
+    # Union types
     "RecordingInput",
     "RenderInput",
     "GameInput",
+    "LiveGameInput",
+    # Functions
     "make_request",
     "make_lcu_request",
     "read_lockfile",
