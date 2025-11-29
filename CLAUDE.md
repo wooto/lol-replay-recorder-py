@@ -12,29 +12,44 @@ A Python library for recording League of Legends replays. The library provides A
 ## Development Commands
 
 ```bash
-# Install dependencies
-poetry install
+# Install dependencies (creates .venv automatically)
+uv sync
 
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run only unit tests
-poetry run pytest -m unit
+uv run pytest -m unit
 
 # Run only e2e tests (requires League client)
-poetry run pytest -m e2e
+uv run pytest -m e2e
 
 # Run a single test file
-poetry run pytest tests/unit/test_utils.py
+uv run pytest tests/unit/test_utils.py
 
 # Run a specific test
-poetry run pytest tests/unit/test_utils.py::test_sleep_waits_correct_milliseconds
+uv run pytest tests/unit/test_utils.py::test_sleep_waits_correct_milliseconds
 
 # Type checking
-poetry run mypy src/
+uv run mypy src/
 
 # Linting
-poetry run ruff check src/
+uv run ruff check src/
+
+# Add a new dependency
+uv add <package-name>
+
+# Add a dev dependency
+uv add --dev <package-name>
+
+# Remove a dependency
+uv remove <package-name>
+
+# Update dependencies
+uv lock --upgrade
+
+# Install specific Python version
+uv python install 3.10
 ```
 
 ## Architecture

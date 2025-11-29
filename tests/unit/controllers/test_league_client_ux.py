@@ -41,9 +41,15 @@ class TestLeagueClientUx:
             yield mock
 
     @pytest.fixture
+    def mock_asyncio_create_subprocess(self):
+        """Mock asyncio.create_subprocess_exec."""
+        with patch('asyncio.create_subprocess_exec') as mock:
+            yield mock
+
+    @pytest.fixture
     def mock_pygetwindow(self):
         """Mock pygetwindow."""
-        with patch('lol_replay_recorder.controllers.league_client_ux.gw') as mock:
+        with patch('lol_replay_recorder.controllers.window_handler._get_pygetwindow') as mock:
             yield mock
 
     def test_init(self, league_client_ux):
@@ -145,10 +151,7 @@ class TestLeagueClientUx:
         assert result == expected_settings
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-game-settings/v1/game-settings',
-            'GET',
-            None,
-            3
+            '/lol-game-settings/v1/game-settings'
         )
 
     @pytest.mark.asyncio
@@ -162,10 +165,7 @@ class TestLeagueClientUx:
         assert result == expected_settings
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-game-settings/v1/input-settings',
-            'GET',
-            None,
-            3
+            '/lol-game-settings/v1/input-settings'
         )
 
     @pytest.mark.asyncio
@@ -180,9 +180,7 @@ class TestLeagueClientUx:
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
             '/riotclient/region-locale',
-            'GET',
-            None,
-            5
+            retries=5
         )
 
     @pytest.mark.asyncio
@@ -198,9 +196,8 @@ class TestLeagueClientUx:
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
             '/lol-game-settings/v1/game-settings',
-            'PATCH',
-            settings_resource,
-            3
+            method='PATCH',
+            body=settings_resource
         )
 
     @pytest.mark.asyncio
@@ -214,9 +211,7 @@ class TestLeagueClientUx:
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
             '/lol-game-settings/v1/save',
-            'POST',
-            None,
-            3
+            method='POST'
         )
 
     @pytest.mark.asyncio
@@ -267,10 +262,7 @@ class TestLeagueClientUx:
         assert result == expected_config
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-replays/v1/configuration',
-            'GET',
-            None,
-            3
+            '/lol-replays/v1/configuration'
         )
 
     @pytest.mark.asyncio
@@ -285,10 +277,7 @@ class TestLeagueClientUx:
         assert result == expected_metadata
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            f'/lol-replays/v1/metadata/{match_id}',
-            'GET',
-            None,
-            3
+            f'/lol-replays/v1/metadata/{match_id}'
         )
 
     @pytest.mark.asyncio
@@ -583,18 +572,26 @@ class TestLeagueClientUx:
         mock_window = MagicMock()
         mock_window.title = "League of Legends"
         mock_window.activate = MagicMock()
-        mock_pygetwindow.getWindowsWithTitle.return_value = [mock_window]
 
-        with patch('lol_replay_recorder.controllers.league_client_ux.pyautogui') as mock_pyautogui:
+        # Set up the mock to return a mock gw module
+        mock_gw_module = MagicMock()
+        mock_gw_module.getWindowsWithTitle.return_value = [mock_window]
+        mock_pygetwindow.return_value = mock_gw_module
+
+        with patch('lol_replay_recorder.controllers.window_handler._get_pyautogui') as mock_pyautogui:
             await league_client_ux.focus_client_window()
 
-            mock_pygetwindow.getWindowsWithTitle.assert_called_once_with("League of Legends")
+            mock_gw_module.getWindowsWithTitle.assert_called_once_with("League of Legends")
 
     @pytest.mark.asyncio
     async def test_focus_client_window_failure(self, mock_pygetwindow):
         """Test failing to focus client window."""
         league_client_ux = LeagueClientUx()
-        mock_pygetwindow.getWindowsWithTitle.return_value = []
+
+        # Set up the mock to return a mock gw module with no windows
+        mock_gw_module = MagicMock()
+        mock_gw_module.getWindowsWithTitle.return_value = []
+        mock_pygetwindow.return_value = mock_gw_module
 
         # Should not raise an exception, just print error
         await league_client_ux.focus_client_window()
