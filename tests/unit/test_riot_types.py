@@ -10,27 +10,39 @@ class TestPlatformId(unittest.TestCase):
 
     def test_platform_id_values(self):
         """Test PlatformId enum has correct values."""
-        self.assertEqual(PlatformId.NA1.value, "NA1")
-        self.assertEqual(PlatformId.EUW1.value, "EUW1")
-        self.assertEqual(PlatformId.KR.value, "KR")
-        self.assertEqual(PlatformId.EUN1.value, "EUN1")
-        self.assertEqual(PlatformId.BR1.value, "BR1")
-        self.assertEqual(PlatformId.LA1.value, "LA1")
-        self.assertEqual(PlatformId.LA2.value, "LA2")
-        self.assertEqual(PlatformId.OC1.value, "OC1")
-        self.assertEqual(PlatformId.RU.value, "RU")
-        self.assertEqual(PlatformId.TR1.value, "TR1")
-        self.assertEqual(PlatformId.JP1.value, "JP1")
-        self.assertEqual(PlatformId.PH2.value, "PH2")
-        self.assertEqual(PlatformId.SG2.value, "SG2")
-        self.assertEqual(PlatformId.TW2.value, "TW2")
-        self.assertEqual(PlatformId.VN2.value, "VN2")
-        self.assertEqual(PlatformId.TH2.value, "TH2")
-        self.assertEqual(PlatformId.ID2.value, "ID2")
+        self.assertEqual(PlatformId.NA1.value, "na1")
+        self.assertEqual(PlatformId.EUW1.value, "euw1")
+        self.assertEqual(PlatformId.KR.value, "kr")
+        self.assertEqual(PlatformId.EUNE1.value, "eun1")  # Updated name from EUN1 to EUNE1
+        self.assertEqual(PlatformId.BR1.value, "br1")
+        self.assertEqual(PlatformId.LA1.value, "la1")
+        self.assertEqual(PlatformId.LA2.value, "la2")
+        self.assertEqual(PlatformId.OC1.value, "oc1")
+        self.assertEqual(PlatformId.RU.value, "ru")
+        self.assertEqual(PlatformId.TR1.value, "tr1")
+        self.assertEqual(PlatformId.JP1.value, "jp1")
+        self.assertEqual(PlatformId.PH2.value, "ph2")
+        self.assertEqual(PlatformId.SG2.value, "sg2")
+        self.assertEqual(PlatformId.TW2.value, "tw2")
+        self.assertEqual(PlatformId.VN2.value, "vn2")
+        self.assertEqual(PlatformId.TH2.value, "th2")
+
+        # Test additional cluster and regional platform IDs
+        self.assertEqual(PlatformId.EUROPE.value, "europe")
+        self.assertEqual(PlatformId.ASIA.value, "asia")
+        self.assertEqual(PlatformId.SEA.value, "sea")
+        self.assertEqual(PlatformId.AMERICAS.value, "americas")
+        self.assertEqual(PlatformId.AP.value, "ap")
+        self.assertEqual(PlatformId.BR.value, "br")
+        self.assertEqual(PlatformId.EU.value, "eu")
+        self.assertEqual(PlatformId.NA.value, "na")
+        self.assertEqual(PlatformId.LATAM.value, "latam")
+        self.assertEqual(PlatformId.ESPORTS.value, "esports")
+        self.assertEqual(PlatformId.APAC.value, "apac")
 
     def test_platform_id_count(self):
         """Test PlatformId enum has correct number of values."""
-        self.assertEqual(len(PlatformId), 17)
+        self.assertEqual(len(PlatformId), 27)
 
 
 class TestTypeAliases(unittest.TestCase):

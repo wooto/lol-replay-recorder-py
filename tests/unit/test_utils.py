@@ -94,7 +94,7 @@ def test_seconds_to_millis():
 
 def test_get_riot_id():
     assert get_riot_id("PlayerName", "1234") == "PlayerName1234"
-    assert get_riot_id("Test", "NA1") == "TestNA1"
+    assert get_riot_id("Test", "na1") == "Testna1"
     assert get_riot_id("", "TAG") == "TAG"
     assert get_riot_id("User", "") == "User"
 

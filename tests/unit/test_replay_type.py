@@ -52,7 +52,7 @@ class TestRecordingProperties:
             # Missing required field
             invalid_props = {
                 "gameId": "12345",
-                "platformId": "NA1",
+                "platformId": "na1",
                 "startTime": 1234567890,
                 # Missing endTime
             }
@@ -62,7 +62,7 @@ class TestRecordingProperties:
         """Test valid RecordingProperties creation"""
         props: RecordingProperties = {
             "gameId": "12345",
-            "platformId": "NA1",
+            "platformId": "na1",
             "startTime": 1234567890,
             "endTime": 1234567990,
             "gameVersion": "13.1.123.456",
@@ -75,7 +75,7 @@ class TestRecordingProperties:
         }
 
         assert props["gameId"] == "12345"
-        assert props["platformId"] == "NA1"
+        assert props["platformId"] == "na1"
 
 
 class TestRenderProperties:
@@ -133,7 +133,7 @@ class TestGameData:
         """Test valid GameData creation"""
         data: GameData = {
             "gameId": "12345",
-            "platformId": "NA1",
+            "platformId": "na1",
             "gameCreation": 1234567890,
             "gameDuration": 1800,
             "gameVersion": "13.1.123.456",
@@ -145,7 +145,7 @@ class TestGameData:
         }
 
         assert data["gameId"] == "12345"
-        assert data["platformId"] == "NA1"
+        assert data["platformId"] == "na1"
 
 
 class TestAdditionalTypes:

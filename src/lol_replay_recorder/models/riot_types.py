@@ -17,28 +17,39 @@ class PlatformId(str, Enum):
 
     Examples:
         >>> PlatformId.NA1
-        'NA1'
+        'na1'
         >>> PlatformId.EUW1
-        'EUW1'
+        'euw1'
     """
 
-    NA1 = "NA1"
-    EUW1 = "EUW1"
-    KR = "KR"
-    EUN1 = "EUN1"
-    BR1 = "BR1"
-    LA1 = "LA1"
-    LA2 = "LA2"
-    OC1 = "OC1"
-    RU = "RU"
-    TR1 = "TR1"
-    JP1 = "JP1"
-    PH2 = "PH2"
-    SG2 = "SG2"
-    TW2 = "TW2"
-    VN2 = "VN2"
-    TH2 = "TH2"
-    ID2 = "ID2"
+    NA1 = "na1"
+    EUW1 = "euw1"
+    EUNE1 = "eun1"  # Fixed name from EUN1 to EUNE1 to match TypeScript
+    KR = "kr"
+    BR1 = "br1"
+    LA1 = "la1"
+    LA2 = "la2"
+    OC1 = "oc1"
+    RU = "ru"
+    TR1 = "tr1"
+    JP1 = "jp1"
+    PH2 = "ph2"
+    SG2 = "sg2"
+    TW2 = "tw2"
+    VN2 = "vn2"
+    TH2 = "th2"
+    # Additional platform IDs from TypeScript reference
+    EUROPE = "europe"
+    ASIA = "asia"
+    SEA = "sea"
+    AMERICAS = "americas"
+    AP = "ap"
+    BR = "br"
+    EU = "eu"
+    NA = "na"
+    LATAM = "latam"
+    ESPORTS = "esports"
+    APAC = "apac"
 
 
 # Type aliases for Riot API region and cluster identifiers
