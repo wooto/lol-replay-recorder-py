@@ -76,7 +76,7 @@ def truncate_patch_version(raw_patch_data: str) -> str:
     return f"{tokens[0]}.{tokens[1]}"
 
 
-def is_match_on_current_patch(match: dict, raw_current_patch_data: str) -> bool:
+def is_match_on_current_patch(match: dict[str, Any], raw_current_patch_data: str) -> bool:
     """Check if match is on current patch by comparing truncated version strings."""
     raw_match_patch_data = match.get('gameVersion', '')
     match_patch = truncate_patch_version(raw_match_patch_data)
@@ -100,7 +100,7 @@ def seconds_to_minutes_formatted(s: float) -> str:
     return f"{minutes}m : {seconds_string}s"
 
 
-def is_empty(obj: dict) -> bool:
+def is_empty(obj: dict[Any, Any]) -> bool:
     """Check if dictionary is empty."""
     return len(obj.keys()) == 0
 

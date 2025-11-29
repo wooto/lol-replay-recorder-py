@@ -27,7 +27,7 @@ from .window_handler import WindowHandler, Key
 class RiotGameClient:
     """Controller for interacting with Riot Game Client."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.riot_client_services_path = '"C:\\Riot Games\\Riot Client\\RiotClientServices.exe"'
         self.default_client_paths = ['C:\\Riot Games\\Riot Client']
         self._window_handler: Optional[WindowHandler] = None

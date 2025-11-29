@@ -3,7 +3,7 @@ from enum import IntEnum
 from typing import Any
 
 # Lazy imports to avoid DISPLAY dependency in headless CI environments
-def _get_pyautogui():
+def _get_pyautogui() -> Any:
     import os
     # Set DISPLAY to a dummy value for headless environments if not present
     if not os.environ.get('DISPLAY'):
@@ -11,16 +11,16 @@ def _get_pyautogui():
     import pyautogui
     return pyautogui
 
-def _get_pygetwindow():
+def _get_pygetwindow() -> Any:
     import os
     # Set DISPLAY to a dummy value for headless environments if not present
     if not os.environ.get('DISPLAY'):
         os.environ['DISPLAY'] = ':99'
-    import pygetwindow as gw
+    import pygetwindow as gw  # type: ignore[import-untyped]
 
     # Add compatibility layer for missing getWindowsWithTitle
     if not hasattr(gw, 'getWindowsWithTitle'):
-        def getWindowsWithTitle(title):
+        def getWindowsWithTitle(title: str) -> list[Any]:
             """Compatibility function to get windows by title using available pygetwindow API."""
             try:
                 # Try to find windows with matching titles
@@ -33,14 +33,14 @@ def _get_pygetwindow():
                 if matching_titles:
                     # Create mock window objects with the required attributes
                     class MockWindow:
-                        def __init__(self, title):
+                        def __init__(self, title: str) -> None:
                             self.title = title
                             self.left = 100  # Default values
                             self.top = 100
                             self.width = 800
                             self.height = 600
 
-                        def activate(self):
+                        def activate(self) -> None:
                             # Mock activation
                             pass
 
@@ -211,7 +211,7 @@ KEY_MAP = {
 class Region:
     """Window region information."""
 
-    def __init__(self, left: int, top: int, width: int, height: int):
+    def __init__(self, left: int, top: int, width: int, height: int) -> None:
         self.left = left
         self.top = top
         self.width = width

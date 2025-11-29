@@ -30,7 +30,7 @@ class LeagueClient:
     - Complex workflows spanning multiple controllers
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize LeagueClient orchestrator."""
         self.riot_game_client: Optional[RiotGameClient] = None
         self.league_client_ux: Optional[LeagueClientUx] = None
@@ -213,7 +213,8 @@ class LeagueClient:
                 try:
                     result = subprocess.run(
                         ["pgrep", "-f", process_name],
-                        capture_output=True
+                        capture_output=True,
+                        text=True
                     )
                     if result.returncode != 0:
                         break
