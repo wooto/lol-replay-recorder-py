@@ -61,3 +61,55 @@ def convert_file_path(path: str) -> str:
 def refine_region(region: str) -> str:
     """Remove digits from region string."""
     return re.sub(r"\d", "", region)
+
+
+def get_riot_id(summoner_name: str, tagline: str) -> str:
+    """Combine summoner name and tagline to create Riot ID."""
+    return f"{summoner_name}{tagline}"
+
+
+def truncate_patch_version(raw_patch_data: str) -> str:
+    """Shortens raw patch string to one decimal place (e.g. 11.7, 12.13, 10.9)."""
+    tokens = raw_patch_data.split('.')
+    if len(tokens) < 2:
+        return raw_patch_data
+    return f"{tokens[0]}.{tokens[1]}"
+
+
+def is_match_on_current_patch(match: dict, raw_current_patch_data: str) -> bool:
+    """Check if match is on current patch by comparing truncated version strings."""
+    raw_match_patch_data = match.get('gameVersion', '')
+    match_patch = truncate_patch_version(raw_match_patch_data)
+    current_patch = truncate_patch_version(raw_current_patch_data)
+    return match_patch == current_patch
+
+
+def seconds_to_minutes_formatted(s: float) -> str:
+    """Format seconds as minutes and seconds (e.g., '2m : 30s')."""
+    minutes = s / 60
+    seconds_float = minutes - int(minutes)
+    minutes = int(minutes)
+    seconds_int = int(round(seconds_float * 60))
+
+    # Handle case where rounding pushes seconds to 60
+    if seconds_int == 60:
+        minutes += 1
+        seconds_int = 0
+
+    seconds_string = f"{seconds_int}"
+    return f"{minutes}m : {seconds_string}s"
+
+
+def is_empty(obj: dict) -> bool:
+    """Check if dictionary is empty."""
+    return len(obj.keys()) == 0
+
+
+def splice_string(text: str, start_index: int, end_char: str) -> str:
+    """Extract substring from start_index until end_char is found (exclusive)."""
+    spliced_string = ""
+    for i in range(start_index, len(text)):
+        if text[i] == end_char:
+            break
+        spliced_string += text[i]
+    return spliced_string

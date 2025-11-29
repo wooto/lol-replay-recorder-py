@@ -9,6 +9,12 @@ from lol_replay_recorder.utils.utils import (
     seconds_to_millis,
     sleep,
     sleep_in_seconds,
+    get_riot_id,
+    truncate_patch_version,
+    is_match_on_current_patch,
+    seconds_to_minutes_formatted,
+    is_empty,
+    splice_string,
 )
 from datetime import datetime
 
@@ -84,3 +90,50 @@ def test_millis_to_seconds():
 def test_seconds_to_millis():
     assert seconds_to_millis(1) == 1000
     assert seconds_to_millis(0.5) == 500
+
+
+def test_get_riot_id():
+    assert get_riot_id("PlayerName", "1234") == "PlayerName1234"
+    assert get_riot_id("Test", "NA1") == "TestNA1"
+    assert get_riot_id("", "TAG") == "TAG"
+    assert get_riot_id("User", "") == "User"
+
+
+def test_truncate_patch_version():
+    assert truncate_patch_version("13.1.123.456") == "13.1"
+    assert truncate_patch_version("12.5.321") == "12.5"
+    assert truncate_patch_version("11.23") == "11.23"
+    assert truncate_patch_version("10.7.1") == "10.7"
+
+
+def test_is_match_on_current_patch():
+    match = {"gameVersion": "13.1.123.456"}
+    current_patch = "13.1.321.789"
+    assert is_match_on_current_patch(match, current_patch) == True
+
+    match_diff = {"gameVersion": "12.5.123.456"}
+    assert is_match_on_current_patch(match_diff, current_patch) == False
+
+    match_exact = {"gameVersion": "13.1"}
+    assert is_match_on_current_patch(match_exact, current_patch) == True
+
+
+def test_seconds_to_minutes_formatted():
+    assert seconds_to_minutes_formatted(120) == "2m : 0s"
+    assert seconds_to_minutes_formatted(90) == "1m : 30s"
+    assert seconds_to_minutes_formatted(30) == "0m : 30s"
+    assert seconds_to_minutes_formatted(3630) == "60m : 30s"
+    assert seconds_to_minutes_formatted(0) == "0m : 0s"
+
+
+def test_is_empty():
+    assert is_empty({}) == True
+    assert is_empty({"key": "value"}) == False
+    assert is_empty({"nested": {}}) == False
+
+
+def test_splice_string():
+    assert splice_string("hello world", 6, " ") == "world"
+    assert splice_string("test-string", 5, "-") == "string"
+    assert splice_string("filename.txt", 0, ".") == "filename"
+    assert splice_string("path/to/file", 5, "/") == "to"

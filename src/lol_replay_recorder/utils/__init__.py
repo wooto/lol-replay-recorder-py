@@ -7,6 +7,12 @@ from .utils import (
     format_date,
     convert_file_path,
     refine_region,
+    get_riot_id,
+    truncate_patch_version,
+    is_match_on_current_patch,
+    seconds_to_minutes_formatted,
+    is_empty,
+    splice_string,
 )
 
 __all__ = [
@@ -18,4 +24,10 @@ __all__ = [
     "format_date",
     "convert_file_path",
     "refine_region",
+    "get_riot_id",
+    "truncate_patch_version",
+    "is_match_on_current_patch",
+    "seconds_to_minutes_formatted",
+    "is_empty",
+    "splice_string",
 ]
