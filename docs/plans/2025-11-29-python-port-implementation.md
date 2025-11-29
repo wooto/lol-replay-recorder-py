@@ -8,6 +8,12 @@
 
 **Tech Stack:** Python 3.10+, Poetry, uv, pytest, httpx, PyYAML, pyautogui, pygetwindow, pywin32
 
+**TypeScript Reference:** The original TypeScript implementation is located at `../lol-replay-recorder/src/`. When implementing each module, refer to the corresponding TypeScript file to understand the exact behavior, edge cases, and API contracts. Key files to reference:
+- Controllers: `../lol-replay-recorder/src/controller/`
+- Models: `../lol-replay-recorder/src/model/`
+- APIs: `../lol-replay-recorder/src/apis/`
+- Utils: `../lol-replay-recorder/src/utils/utils.ts`
+
 ---
 
 ## Phase 1: Project Foundation
