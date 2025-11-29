@@ -4,10 +4,18 @@ from typing import Any
 
 # Lazy imports to avoid DISPLAY dependency in headless CI environments
 def _get_pyautogui():
+    import os
+    # Set DISPLAY to a dummy value for headless environments if not present
+    if not os.environ.get('DISPLAY'):
+        os.environ['DISPLAY'] = ':99'
     import pyautogui
     return pyautogui
 
 def _get_pygetwindow():
+    import os
+    # Set DISPLAY to a dummy value for headless environments if not present
+    if not os.environ.get('DISPLAY'):
+        os.environ['DISPLAY'] = ':99'
     import pygetwindow as gw
 
     # Add compatibility layer for missing getWindowsWithTitle
