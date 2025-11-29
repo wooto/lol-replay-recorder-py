@@ -31,9 +31,12 @@ def test_region_area():
 async def test_window_handler_keyboard_type():
     handler = WindowHandler()
 
-    with patch("pyautogui.press") as mock_press:
+    with patch("lol_replay_recorder.controllers.window_handler._get_pyautogui") as mock_get_pyautogui:
+        mock_pyautogui = MagicMock()
+        mock_get_pyautogui.return_value = mock_pyautogui
+
         await handler.keyboard_type(Key.Enter)
-        mock_press.assert_called_once()
+        mock_pyautogui.press.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -55,7 +58,7 @@ async def test_window_handler_focus_window():
         mock_gw.getWindowsWithTitle.return_value = [mock_window]
         mock_get_gw.return_value = mock_gw
 
-        with patch("pyautogui.click"):
+        with patch("lol_replay_recorder.controllers.window_handler._get_pyautogui"):
             await handler.focus_client_window("Test Window")
 
             # Verify that getWindowsWithTitle was called with the correct title
