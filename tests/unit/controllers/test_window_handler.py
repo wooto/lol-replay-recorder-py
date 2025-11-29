@@ -40,7 +40,7 @@ async def test_window_handler_keyboard_type():
 async def test_window_handler_focus_window():
     handler = WindowHandler()
 
-    mock_window = AsyncMock()
+    mock_window = MagicMock()
     mock_window.title = "Test Window"
     mock_window.left = 100
     mock_window.top = 100
@@ -48,6 +48,15 @@ async def test_window_handler_focus_window():
     mock_window.height = 600
 
     with patch("lol_replay_recorder.controllers.window_handler._get_pygetwindow") as mock_get_gw:
-            mock_get_gw.return_value.getWindowsWithTitle = MagicMock(return_value=[mock_window])
-            with patch("pyautogui.click"):
-                await handler.focus_client_window("Test Window")
+        # Mock the pygetwindow module with the current API
+        mock_gw = MagicMock()
+        mock_gw.getAllTitles.return_value = ["Test Window", "Other Window"]
+        mock_gw.getActiveWindow.return_value = mock_window
+        mock_gw.getWindowsWithTitle.return_value = [mock_window]
+        mock_get_gw.return_value = mock_gw
+
+        with patch("pyautogui.click"):
+            await handler.focus_client_window("Test Window")
+
+            # Verify that getWindowsWithTitle was called with the correct title
+            mock_gw.getWindowsWithTitle.assert_called_once_with("Test Window")
