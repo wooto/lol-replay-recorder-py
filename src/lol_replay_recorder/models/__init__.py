@@ -1,7 +1,14 @@
 from .custom_error import CustomError
 from .locale import Locale
 from .riot_types import PlatformId, Region, Cluster
-from .summoner import Summoner
+from .summoner import Summoner as SummonerClass
+from .metadata_types import (
+    PlayerInfo as MetadataPlayerInfo,
+    Summoner,
+    TeamInfo,
+    SelectorData,
+    SummonerTeamInfo,
+)
 from .replay_type import (
     RecordingProperties,
     RenderProperties,
@@ -12,8 +19,8 @@ from .replay_type import (
     KeyValuePair,
     RenderSetting,
     GameInfo,
-    PlayerInfo,
-    TeamInfo,
+    PlayerInfo as ReplayPlayerInfo,
+    TeamInfo as ReplayTeamInfo,
     EventData,
     # Live Game Data Types
     ActivePlayer,
@@ -56,7 +63,14 @@ __all__ = [
     "PlatformId",
     "Region",
     "Cluster",
+    "SummonerClass",
     "Summoner",
+    "MetadataPlayerInfo",
+    "ReplayPlayerInfo",
+    "TeamInfo",
+    "ReplayTeamInfo",
+    "SelectorData",
+    "SummonerTeamInfo",
     "RecordingProperties",
     "RenderProperties",
     "GameData",
