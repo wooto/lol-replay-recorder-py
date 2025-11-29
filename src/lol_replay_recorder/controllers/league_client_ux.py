@@ -1,12 +1,9 @@
 import asyncio
 import os
 import platform
-import subprocess
 from typing import Any, Dict, Optional
 
 from ..models.lcu_request import make_lcu_request
-from ..models.locale import Locale
-from ..models.riot_types import PlatformId, Region
 from ..models.summoner import Summoner
 from ..models.custom_error import CustomError
 from ..utils.utils import sleep_in_seconds, refine_region
@@ -68,7 +65,7 @@ class LeagueClientUx:
             ]
 
             try:
-                process = await asyncio.create_subprocess_exec(
+                await asyncio.create_subprocess_exec(
                     *cmd_args,
                 )
 
@@ -95,7 +92,7 @@ class LeagueClientUx:
             ]
 
             try:
-                process = await asyncio.create_subprocess_exec(*cmd_args)
+                await asyncio.create_subprocess_exec(*cmd_args)
                 # await process.communicate()  # Uncomment if you want to wait for completion
 
             except Exception as e:

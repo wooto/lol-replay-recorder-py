@@ -1,9 +1,14 @@
-import os
 import asyncio
-import subprocess
-from pathlib import Path
-from typing import Any, Dict, Optional, NamedTuple
+import os
 from base64 import b64encode
+from pathlib import Path
+from typing import Any, Dict, NamedTuple, Optional
+
+from ..models.locale import Locale
+from ..models.riot_request import make_request
+from ..models.riot_types import Region
+from ..utils.utils import refine_region, sleep_in_seconds
+from .window_handler import Key, WindowHandler
 
 
 class LockfileCredentials(NamedTuple):
@@ -16,12 +21,6 @@ class RegionLocale(NamedTuple):
     """Region and locale information."""
     locale: str
     region: str
-
-from ..models.riot_request import make_request
-from ..models.locale import Locale
-from ..models.riot_types import Region
-from ..utils.utils import sleep_in_seconds, refine_region
-from .window_handler import WindowHandler, Key
 
 
 class RiotGameClient:
@@ -145,7 +144,7 @@ class RiotGameClient:
 
         try:
             # Start the process
-            process = await asyncio.create_subprocess_shell(
+            await asyncio.create_subprocess_shell(
                 ' '.join(command),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE

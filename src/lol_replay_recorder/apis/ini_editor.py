@@ -1,6 +1,5 @@
 import configparser
-from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 class IniEditor:

@@ -114,8 +114,8 @@ class Key(IntEnum):
     T = 54
     Y = 55
     U = 56
-    I = 57
-    O = 58
+    KeyI = 57
+    KeyO = 58
     P = 59
     LeftBracket = 60
     RightBracket = 61
@@ -190,7 +190,7 @@ KEY_MAP = {
     Key.Num1: '1', Key.Num2: '2', Key.Num3: '3', Key.Num4: '4', Key.Num5: '5',
     Key.Num6: '6', Key.Num7: '7', Key.Num8: '8', Key.Num9: '9', Key.Num0: '0',
     Key.Q: 'q', Key.W: 'w', Key.E: 'e', Key.R: 'r', Key.T: 't',
-    Key.Y: 'y', Key.U: 'u', Key.I: 'i', Key.O: 'o', Key.P: 'p',
+    Key.Y: 'y', Key.U: 'u', Key.KeyI: 'i', Key.KeyO: 'o', Key.P: 'p',
     Key.A: 'a', Key.S: 's', Key.D: 'd', Key.F: 'f', Key.G: 'g',
     Key.H: 'h', Key.J: 'j', Key.K: 'k', Key.L: 'l',
     Key.Z: 'z', Key.X: 'x', Key.C: 'c', Key.V: 'v', Key.B: 'b',

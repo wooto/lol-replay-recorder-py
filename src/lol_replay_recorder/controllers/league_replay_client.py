@@ -83,7 +83,7 @@ class LeagueReplayClient:
                 await self.get_playback_properties()
                 await self.get_recording_properties()
                 response_received = True
-            except Exception as err:
+            except Exception:
                 num_retries -= 1
                 print(
                     f"Couldn't connect to replay API, waiting {timeout} seconds "
