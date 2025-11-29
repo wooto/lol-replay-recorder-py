@@ -25,11 +25,9 @@ dev = [
 ]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
-packages = [{include = "lol_replay_recorder", from = "src"}]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
