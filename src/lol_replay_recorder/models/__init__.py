@@ -27,6 +27,7 @@ from .replay_type import (
     RenderInput,
     GameInput,
 )
+from .lcu_request import make_lcu_request, read_lockfile
 
 __all__ = [
     "CustomError",
@@ -58,4 +59,6 @@ __all__ = [
     "RecordingInput",
     "RenderInput",
     "GameInput",
+    "make_lcu_request",
+    "read_lockfile",
 ]
