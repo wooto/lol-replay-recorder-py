@@ -147,8 +147,6 @@ class LeagueReplayClient:
 
     async def focus_by_summoner_name(self, target_summoner_name: str) -> None:
         """Focus camera on a summoner by name."""
-        from .league_client import LeagueClient
-
         position = await self.get_in_game_position_by_summoner_name(target_summoner_name)
 
         # Map position to keyboard key
@@ -158,11 +156,11 @@ class LeagueReplayClient:
         ]
         keyboard_key = keys[position]
 
-        execution = LeagueClient()
         handler = WindowHandler()
 
         for i in range(10):
-            await execution.focus_client_window()
+            # Focus League of Legends window
+            await handler.focus_client_window("League of Legends")
 
             # Press key 50 times
             for j in range(50):
