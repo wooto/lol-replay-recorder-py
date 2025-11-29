@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TypedDict, List, Dict, Any, Optional, NotRequired, Union
+from typing import TypedDict, List, Dict, Any, Optional, Union
+from typing_extensions import NotRequired
 
 
 class RecordingProperties(TypedDict):
