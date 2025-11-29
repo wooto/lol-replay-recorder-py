@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch, mock_open
+from unittest.mock import AsyncMock, patch, mock_open, MagicMock
 from pathlib import Path
 from lol_replay_recorder.models.lcu_request import (
     make_lcu_request,
@@ -11,7 +11,9 @@ from lol_replay_recorder.models.lcu_request import (
 async def test_read_lockfile_success():
     lockfile_content = "LeagueClient:12345:54321:mypassword:https"
 
-    with patch("builtins.open", mock_open(read_data=lockfile_content)):
+    # Mock Path.exists() to return True and Path.read_text() to return the lockfile content
+    with patch("pathlib.Path.exists", return_value=True), \
+         patch("pathlib.Path.read_text", return_value=lockfile_content):
         result = await read_lockfile("/fake/path/lockfile")
         assert result["port"] == "54321"
         assert result["password"] == "mypassword"
@@ -20,18 +22,37 @@ async def test_read_lockfile_success():
 @pytest.mark.asyncio
 async def test_make_lcu_request_uses_lockfile_credentials():
     lockfile_content = "LeagueClient:12345:54321:mypassword:https"
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.json = AsyncMock(return_value={"data": "test"})
 
-    with patch("builtins.open", mock_open(read_data=lockfile_content)):
-        with patch("httpx.AsyncClient.request", return_value=mock_response) as mock_req:
+    # Create a regular mock for the response
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.is_success = True
+    mock_response.json.return_value = {"data": "test"}
+
+    # Mock Path.exists() and Path.read_text() for read_lockfile
+    with patch("pathlib.Path.exists", return_value=True), \
+         patch("pathlib.Path.read_text", return_value=lockfile_content):
+
+        # Mock the httpx.AsyncClient context manager and its request method
+        with patch("httpx.AsyncClient") as mock_client_class:
+            # Create a mock instance that will be returned by the context manager
+            mock_client_instance = AsyncMock()
+            mock_client_instance.request.return_value = mock_response
+            mock_client_class.return_value.__aenter__.return_value = mock_client_instance
+
             result = await make_lcu_request(
                 "/fake/lockfile",
                 "/test/endpoint",
                 "GET"
             )
             assert result == {"data": "test"}
-            # Verify authorization header was set
-            call_kwargs = mock_req.call_args.kwargs
-            assert "Authorization" in call_kwargs["headers"]
+            # Verify that client.request was called with correct parameters
+            mock_client_instance.request.assert_called_once_with(
+                method="GET",
+                url="https://127.0.0.1:54321/test/endpoint",
+                headers={
+                    "Authorization": "Basic cmlvdDpteXBhc3N3b3Jk",
+                    "Content-Type": "application/json",
+                },
+                json=None,
+            )
