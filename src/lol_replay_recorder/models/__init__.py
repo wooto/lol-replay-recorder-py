@@ -27,6 +27,7 @@ from .replay_type import (
     RenderInput,
     GameInput,
 )
+from .riot_request import make_request
 from .lcu_request import make_lcu_request, read_lockfile
 
 __all__ = [
@@ -59,6 +60,7 @@ __all__ = [
     "RecordingInput",
     "RenderInput",
     "GameInput",
+    "make_request",
     "make_lcu_request",
     "read_lockfile",
 ]
