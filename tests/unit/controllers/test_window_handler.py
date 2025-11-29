@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from lol_replay_recorder.controllers.window_handler import (
     Key,
     Region,
@@ -47,6 +47,7 @@ async def test_window_handler_focus_window():
     mock_window.width = 800
     mock_window.height = 600
 
-    with patch("pygetwindow.getWindowsWithTitle", return_value=[mock_window]):
-        with patch("pyautogui.click"):
-            await handler.focus_client_window("Test Window")
+    with patch("lol_replay_recorder.controllers.window_handler._get_pygetwindow") as mock_get_gw:
+            mock_get_gw.return_value.getWindowsWithTitle = MagicMock(return_value=[mock_window])
+            with patch("pyautogui.click"):
+                await handler.focus_client_window("Test Window")

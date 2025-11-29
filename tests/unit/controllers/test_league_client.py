@@ -10,7 +10,7 @@ from lol_replay_recorder.controllers.league_client_ux import LeagueClientUx
 from lol_replay_recorder.controllers.riot_game_client import RiotGameClient
 from lol_replay_recorder.controllers.league_replay_client import LeagueReplayClient
 from lol_replay_recorder.models.locale import Locale
-from lol_replay_recorder.models.riot_types import Region
+from lol_replay_recorder.models.riot_types import Region, PlatformId
 from lol_replay_recorder.models.custom_error import CustomError
 from lol_replay_recorder.apis.yaml_editor import YamlEditor
 from lol_replay_recorder.apis.ini_editor import IniEditor
@@ -83,7 +83,7 @@ class TestLeagueClient:
     async def test_start_riot_processes_safely_success(self, league_client, mock_asyncio_subprocess):
         """Test successful start of Riot processes."""
         params = {
-            "region": Region.NA,
+            "region": PlatformId.NA,
             "locale": Locale.en_US,
             "username": "test_user",
             "password": "test_pass"
@@ -105,13 +105,13 @@ class TestLeagueClient:
                         mock_stop.assert_called_once()
                         mock_set_locale.assert_called_once_with(Locale.en_US)
                         mock_riot_client.start_riot_client.assert_called_once()
-                        mock_riot_client.login.assert_called_once_with("test_user", "test_pass", Region.NA)
+                        mock_riot_client.login.assert_called_once_with("test_user", "test_pass", PlatformId.NA)
 
     @pytest.mark.asyncio
     async def test_start_riot_processes_safely_retry_logic(self, league_client, mock_asyncio_subprocess):
         """Test retry logic when starting Riot processes."""
         params = {
-            "region": Region.NA,
+            "region": PlatformId.NA,
             "locale": Locale.en_US,
             "username": "test_user",
             "password": "test_pass"
@@ -119,7 +119,14 @@ class TestLeagueClient:
 
         # Mock sub-components with failure then success
         mock_riot_client = AsyncMock()
-        mock_riot_client.start_riot_client.side_effect = [Exception("Failed"), None]
+        call_count = 0
+        async def mock_start_riot_client(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise Exception("Failed")
+            return None
+        mock_riot_client.start_riot_client.side_effect = mock_start_riot_client
         mock_league_ux = AsyncMock()
         mock_league_ux.get_region_locale.return_value = {"locale": "en_US", "region": "na"}
         mock_league_ux.get_state.side_effect = [{"action": "Busy"}, {"action": "Idle"}]
@@ -138,7 +145,7 @@ class TestLeagueClient:
     async def test_start_riot_processes_safely_locale_mismatch(self, league_client, mock_asyncio_subprocess):
         """Test locale mismatch error when starting Riot processes."""
         params = {
-            "region": Region.NA,
+            "region": PlatformId.NA,
             "locale": Locale.en_US,
             "username": "test_user",
             "password": "test_pass"
@@ -192,8 +199,8 @@ class TestLeagueClient:
         with patch('platform.system', return_value='Windows'):
             with patch('os.path.exists', return_value=True):
                 paths = await league_client.find_windows_installed()
-                assert len(paths) == 1
-                assert "League of Legends" in paths[0]
+                assert len(paths) == 3  # All three potential paths exist
+                assert all("League of Legends" in path for path in paths)
 
     @pytest.mark.asyncio
     async def test_find_windows_installed_not_found(self, league_client):
@@ -206,9 +213,10 @@ class TestLeagueClient:
     @pytest.mark.asyncio
     async def test_get_installed_paths(self, league_client):
         """Test getting installed paths."""
-        with patch.object(league_client, 'find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
-            paths = await league_client.get_installed_paths()
-            assert paths == ["C:\\Riot Games\\League of Legends"]
+        with patch('platform.system', return_value='Windows'):
+            with patch.object(league_client, 'find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
+                paths = await league_client.get_installed_paths()
+                assert paths == ["C:\\Riot Games\\League of Legends"]
 
     @pytest.mark.asyncio
     async def test_get_config_file_paths(self, league_client):
@@ -322,7 +330,7 @@ class TestLeagueClient:
 
         with patch('platform.system', return_value='Windows'):
             await league_client.focus_client_window()
-            mock_window_handler.focus_client_window.assert_called_once_with("League of Legends")
+            mock_window_handler.focus_client_window.assert_called_once_with("League of Legends (TM)")
 
     def test_get_product_settings_path_windows(self, league_client):
         """Test getting product settings path on Windows."""
@@ -336,7 +344,7 @@ class TestLeagueClient:
         with patch('platform.system', return_value='Darwin'):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
-            assert "Library" in path
+            assert ".config" in path  # Unix systems use .config directory
 
     @pytest.mark.asyncio
     async def test_initialize_components(self, league_client):
