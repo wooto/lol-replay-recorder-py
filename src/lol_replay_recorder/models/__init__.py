@@ -59,6 +59,7 @@ from .replay_type import (
 
 import warnings
 from ..clients.http import LCUClient, RiotAPIClient
+from ..constants import RIOT_REPLAY_BASE_URL
 
 
 async def make_request(method: str, url: str, **kwargs):
@@ -77,8 +78,8 @@ async def make_request(method: str, url: str, **kwargs):
     # Convert legacy signature to new signature
     # Legacy: make_request(method, url, **kwargs)
     # New: client.request(endpoint, method, **kwargs)
-    if url.startswith("https://127.0.0.1:2999"):
-        endpoint = url.replace("https://127.0.0.1:2999", "")
+    if url.startswith(RIOT_REPLAY_BASE_URL):
+        endpoint = url.replace(RIOT_REPLAY_BASE_URL, "")
     else:
         endpoint = url  # fallback for legacy usage
 

@@ -11,6 +11,13 @@ import httpx
 from typing import Any, Dict, Optional
 
 from ...domain.errors import HTTPError
+from .constants import (
+    VERIFY_SSL_DEFAULT,
+    DEFAULT_TIMEOUT,
+    HTTP_RETRY_COUNT,
+    CONTENT_TYPE_JSON,
+    HTTP_NOT_FOUND,
+)
 
 
 class BaseHTTPClient:
@@ -23,7 +30,7 @@ class BaseHTTPClient:
     - JSON response parsing with fallback
     """
 
-    def __init__(self, verify_ssl: bool = False, timeout: float = 30.0):
+    def __init__(self, verify_ssl: bool = VERIFY_SSL_DEFAULT, timeout: float = DEFAULT_TIMEOUT):
         """Initialize the HTTP client.
 
         Args:
@@ -39,7 +46,7 @@ class BaseHTTPClient:
         url: str,
         headers: Optional[Dict[str, str]] = None,
         body: Optional[Dict[str, Any]] = None,
-        retries: int = 5,
+        retries: int = HTTP_RETRY_COUNT,
         base_delay: float = 0.1,
     ) -> Any:
         """Make HTTP request with retry logic and error handling.
@@ -67,7 +74,7 @@ class BaseHTTPClient:
             request_headers.update(headers)
 
         if method.upper() != "GET":
-            request_headers["Content-Type"] = "application/json"
+            request_headers["Content-Type"] = CONTENT_TYPE_JSON
 
         try:
             async with httpx.AsyncClient(
@@ -83,7 +90,7 @@ class BaseHTTPClient:
 
                 if not response.is_success:
                     # For 404 errors, don't retry - raise immediately
-                    if response.status_code == 404:
+                    if response.status_code == HTTP_NOT_FOUND:
                         raise HTTPError(
                             url,
                             response.status_code,

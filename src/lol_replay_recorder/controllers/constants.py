@@ -1,0 +1,109 @@
+"""
+Constants for controller implementations.
+
+This module contains constants used by controller classes for game control,
+window management, and API interactions.
+"""
+
+from ..constants import (
+    RIOT_REPLAY_BASE_URL,
+    WINDOW_FOCUS_RETRY_COUNT,
+    ORDER_TEAM_PLAYERS_START,
+    CHAOS_TEAM_PLAYERS_START,
+    CAMERA_FOCUS_DELAY_TIME,
+    LCU_HIGHLIGHTS_FOLDER_PATH_ENDPOINT,
+    EVT_SELECT_ORDER_PLAYER_PREFIX,
+    EVT_SELECT_CHAOS_PLAYER_PREFIX,
+    GENERAL_SECTION,
+    ENABLE_REPLAY_API_KEY,
+    KEYbinds_SECTION,
+    GAME_EVENTS_SECTION,
+)
+
+# Window management constants
+WINDOW_TITLE_SEARCH_RETRY_COUNT = WINDOW_FOCUS_RETRY_COUNT
+WINDOW_MINIMIZE_CHECK_INTERVAL = 1.0
+WINDOW_BRING_TO_FRONT_DELAY = 0.5
+
+# League of Legends window titles
+LEAGUE_CLIENT_WINDOW_TITLE = "League Client"
+LEAGUE_GAME_WINDOW_TITLE = "League of Legends"
+
+# Camera control constants
+MIN_ZOOM_LEVEL = 0
+MAX_ZOOM_LEVEL = 25
+ZOOM_STEP = 1
+DEFAULT_ZOOM_LEVEL = 15
+
+# Player selection key bindings
+PLAYER_SELECTION_KEYS_ORDER = ["1", "2", "3", "4", "5"]
+PLAYER_SELECTION_KEYS_CHAOS = ["Q", "W", "E", "R", "T"]
+
+# Focus key events for different players
+FOCUS_KEY_EVENTS_ORDER = [
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_ORDER_PLAYER_PREFIX}1", "[1]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_ORDER_PLAYER_PREFIX}2", "[2]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_ORDER_PLAYER_PREFIX}3", "[3]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_ORDER_PLAYER_PREFIX}4", "[4]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_ORDER_PLAYER_PREFIX}5", "[5]"),
+]
+
+FOCUS_KEY_EVENTS_CHAOS = [
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_CHAOS_PLAYER_PREFIX}0", "[Q]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_CHAOS_PLAYER_PREFIX}1", "[W]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_CHAOS_PLAYER_PREFIX}2", "[E]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_CHAOS_PLAYER_PREFIX}3", "[R]"),
+    (GAME_EVENTS_SECTION, f"{EVT_SELECT_CHAOS_PLAYER_PREFIX}4", "[T]"),
+]
+
+# Replay API endpoints
+REPLAY_READY_ENDPOINT = f"{RIOT_REPLAY_BASE_URL}/replay/render/"
+REPLAY_PLAYBACK_ENDPOINT = f"{RIOT_REPLAY_BASE_URL}/replay/playback/"
+REPLAY_RECORDING_ENDPOINT = f"{RIOT_REPLAY_BASE_URL}/replay/recording/"
+REPLAY_GAME_DATA_ENDPOINT = f"{RIOT_REPLAY_BASE_URL}/replay/gamedata/"
+
+# Default render properties
+DEFAULT_RESOLUTION = {"width": 1920, "height": 1080}
+DEFAULT_FPS = 30
+DEFAULT_BITRATE = 5000  # kbps
+
+# Replay playback states
+PLAYBACK_STATE_PLAYING = "playing"
+PLAYBACK_STATE_PAUSED = "paused"
+PLAYBACK_STATE_STOPPED = "stopped"
+PLAYBACK_STATE_LOADING = "loading"
+PLAYBACK_STATE_READY = "ready"
+
+# Time control constants
+TIME_CONTROL_MULTIPLIER_FAST = 2.0
+TIME_CONTROL_MULTIPLIER_SLOW = 0.5
+TIME_CONTROL_MULTIPLIER_NORMAL = 1.0
+
+# Game settings file paths
+WINDOWS_GAME_SETTINGS_PATHS = [
+    "Config/PersistedSettings.json",
+    "Game/Config/PersistedSettings.json",
+    "Config/game.cfg",
+    "Game/Config/game.cfg",
+]
+
+# Replay recording settings
+REPLAY_START_DELAY = 1.0  # seconds
+REPLAY_STOP_DELAY = 1.0   # seconds
+REPLAY_CHECK_INTERVAL = 0.5  # seconds
+
+# Camera focus settings
+CAMERA_FOCUS_RETRY_COUNT = 10
+CAMERA_FOCUS_KEY_PRESS_COUNT = 50
+CAMERA_FOCUS_KEY_PRESS_INTERVAL = 0.2  # seconds
+CAMERA_FOCUS_VERIFICATION_DELAY = 10.0  # seconds
+
+# League Client UX API settings
+LCUX_DEFAULT_RETRIES = 3
+LCUX_MAX_ATTEMPTS = 30
+LCUX_DEFAULT_RETRIES_REGION = 3
+LCUX_DEFAULT_RETRIES_HIGHLIGHTS = 3
+
+# Region and locale settings
+DEFAULT_LOCALE = "en_US"
+DEFAULT_REGION = "NA1"

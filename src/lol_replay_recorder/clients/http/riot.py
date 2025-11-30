@@ -10,6 +10,19 @@ import httpx
 from typing import Any, Dict, Optional
 
 from .base import BaseHTTPClient
+from .constants import (
+    RIOT_REPLAY_API_HOST,
+    RIOT_REPLAY_API_PORT,
+    RIOT_REPLAY_BASE_URL,
+    VERIFY_SSL_DEFAULT,
+)
+from ...constants import (
+    DEFAULT_TIMEOUT,
+    REPLAY_READY_RETRY_COUNT,
+    REPLAY_READY_TIMEOUT,
+    REPLAY_READY_CHECK_INTERVAL,
+    RIOT_API_RETRY_COUNT,
+)
 from ...domain.errors import HTTPError
 
 
@@ -21,7 +34,7 @@ class RiotAPIClient(BaseHTTPClient):
     when a replay is active and uses self-signed certificates.
     """
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 2999, **kwargs: Any):
+    def __init__(self, host: str = RIOT_REPLAY_API_HOST, port: int = RIOT_REPLAY_API_PORT, **kwargs: Any):
         """Initialize Riot API client.
 
         Args:
@@ -29,17 +42,17 @@ class RiotAPIClient(BaseHTTPClient):
             port: API port (default: 2999)
             **kwargs: Additional arguments passed to BaseHTTPClient
         """
-        super().__init__(verify_ssl=False, **kwargs)  # Riot API always uses self-signed certs
+        super().__init__(verify_ssl=VERIFY_SSL_DEFAULT, **kwargs)  # Riot API always uses self-signed certs
         self.host = host
         self.port = port
-        self.base_url = f"https://{host}:{port}"
+        self.base_url = RIOT_REPLAY_BASE_URL
 
     async def request(
         self,
         endpoint: str,
         method: str = "GET",
         body: Optional[Dict[str, Any]] = None,
-        retries: int = 5,
+        retries: int = RIOT_API_RETRY_COUNT,
     ) -> Any:
         """Make request to Riot Replay API.
 
@@ -77,8 +90,8 @@ class RiotAPIClient(BaseHTTPClient):
     # Replay control methods
     async def load(
         self,
-        timeout: float = 30.0,
-        retries: int = 10
+        timeout: float = DEFAULT_TIMEOUT,
+        retries: int = REPLAY_READY_RETRY_COUNT
     ) -> Dict[str, Any]:
         """Load and initialize replay.
 
@@ -250,7 +263,7 @@ class RiotAPIClient(BaseHTTPClient):
             raise HTTPError(url, 0, f"Failed to get thumbnail: {str(e)}")
 
     
-    async def wait_for_ready(self, timeout: float = 60.0, check_interval: float = 1.0) -> bool:
+    async def wait_for_ready(self, timeout: float = REPLAY_READY_TIMEOUT, check_interval: float = REPLAY_READY_CHECK_INTERVAL) -> bool:
         """Wait for the replay API to be ready.
 
         Args:

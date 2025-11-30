@@ -1,9 +1,29 @@
 import os
 from typing import Any
+
 from ..models.replay_type import RecordingProperties, RenderProperties, GameData
 from ..domain.errors import CustomError
 from ..clients.http.riot import RiotAPIClient
 from ..utils.utils import sleep_in_seconds
+# Import constants after path fix
+try:
+    from .constants import (
+        REPLAY_ASSETS_WAIT_TIMEOUT,
+        CAMERA_FOCUS_DELAY_TIME,
+        CHAOS_TEAM_PLAYERS_START,
+        CAMERA_FOCUS_RETRY_COUNT,
+        CAMERA_FOCUS_KEY_PRESS_COUNT,
+        CAMERA_FOCUS_KEY_PRESS_INTERVAL,
+        CAMERA_FOCUS_VERIFICATION_DELAY,
+    )
+except ImportError:
+    # Fallback values if constants file has issues
+    from ..constants import REPLAY_ASSETS_WAIT_TIMEOUT, CHAOS_TEAM_PLAYERS_START
+    CAMERA_FOCUS_DELAY_TIME = 0.5
+    CAMERA_FOCUS_RETRY_COUNT = 10
+    CAMERA_FOCUS_KEY_PRESS_COUNT = 50
+    CAMERA_FOCUS_KEY_PRESS_INTERVAL = 0.2
+    CAMERA_FOCUS_VERIFICATION_DELAY = 10.0
 from .window_handler import WindowHandler, Key
 
 # Disable SSL warnings for self-signed certs
@@ -100,13 +120,13 @@ class LeagueReplayClient:
         await self.wait_for_assets_to_load()
 
     async def wait_for_assets_to_load(self) -> None:
-        """Wait for replay assets to load (time >= 15 or paused)."""
+        """Wait for replay assets to load (time >= REPLAY_ASSETS_WAIT_TIMEOUT or paused)."""
         while True:
             playback_state = await self.get_playback_properties()
             time = playback_state.get("time", 0)
             paused = playback_state.get("paused", False)
 
-            if time >= 15 or paused:
+            if time >= REPLAY_ASSETS_WAIT_TIMEOUT or paused:
                 break
 
     async def wait_for_recording_to_finish(self, time: int) -> None:
@@ -145,7 +165,7 @@ class LeagueReplayClient:
         # Check CHAOS team
         for i, player in enumerate(chaos_team):
             if player.get("riotIdGameName") == summoner_name:
-                return i + 5
+                return i + CHAOS_TEAM_PLAYERS_START
 
         raise CustomError("Summoner not found in game")
 
@@ -162,16 +182,16 @@ class LeagueReplayClient:
 
         handler = WindowHandler()
 
-        for i in range(10):
+        for i in range(CAMERA_FOCUS_RETRY_COUNT):
             # Focus League of Legends window
             await handler.focus_client_window("League of Legends")
 
-            # Press key 50 times
-            for j in range(50):
+            # Press key CAMERA_FOCUS_KEY_PRESS_COUNT times
+            for j in range(CAMERA_FOCUS_KEY_PRESS_COUNT):
                 await handler.keyboard_type(keyboard_key)
-                await sleep_in_seconds(0.2)
+                await sleep_in_seconds(CAMERA_FOCUS_KEY_PRESS_INTERVAL)
 
-            await sleep_in_seconds(10)
+            await sleep_in_seconds(CAMERA_FOCUS_VERIFICATION_DELAY)
 
             # Verify selection
             render_props = await self.get_render_properties()

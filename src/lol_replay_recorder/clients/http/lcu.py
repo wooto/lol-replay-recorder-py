@@ -12,6 +12,20 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .base import BaseHTTPClient
+from .constants import (
+    VERIFY_SSL_DEFAULT,
+    LOCKFILE_PARTS_COUNT,
+    LOCKFILE_PROCESS_INDEX,
+    LOCKFILE_PID_INDEX,
+    LOCKFILE_PORT_INDEX,
+    LOCKFILE_PASSWORD_INDEX,
+    LOCKFILE_PROTOCOL_INDEX,
+    RIOT_AUTH_USERNAME,
+    LCU_BASE_URL_PATTERN,
+    AUTHORIZATION_HEADER,
+    BASIC_AUTH_PREFIX,
+)
+from ...constants import LOCKFILE_WAIT_TIMEOUT, DEFAULT_RETRY_COUNT
 from ...domain.errors import HTTPError, LockfileError
 
 
@@ -30,7 +44,7 @@ class LCUClient(BaseHTTPClient):
             lockfile_path: Path to League Client lockfile (if None, must be provided later)
             **kwargs: Additional arguments passed to BaseHTTPClient
         """
-        super().__init__(verify_ssl=False, **kwargs)  # LCU always uses self-signed certs
+        super().__init__(verify_ssl=VERIFY_SSL_DEFAULT, **kwargs)  # LCU always uses self-signed certs
         self._lockfile_path = lockfile_path
         self._cached_credentials: Optional[Dict[str, str]] = None
 
@@ -62,7 +76,7 @@ class LCUClient(BaseHTTPClient):
 
         # Wait for lockfile to exist
         path = Path(lockfile_path)
-        timeout = 60  # seconds
+        timeout = LOCKFILE_WAIT_TIMEOUT  # seconds
         elapsed = 0
 
         while not path.exists() and elapsed < timeout:
@@ -76,12 +90,12 @@ class LCUClient(BaseHTTPClient):
             content = path.read_text(encoding="utf-8")
             parts = content.split(":")
 
-            if len(parts) < 4:
+            if len(parts) < LOCKFILE_PARTS_COUNT:
                 raise LockfileError(f"Invalid lockfile format: {lockfile_path}")
 
             credentials = {
-                "port": parts[2],
-                "password": parts[3],
+                "port": parts[LOCKFILE_PORT_INDEX],
+                "password": parts[LOCKFILE_PASSWORD_INDEX],
             }
 
             # Cache credentials if they match current lockfile path
@@ -102,12 +116,12 @@ class LCUClient(BaseHTTPClient):
         Returns:
             Dictionary containing Authorization header
         """
-        auth_string = f"riot:{password}"
+        auth_string = f"{RIOT_AUTH_USERNAME}:{password}"
         auth_bytes = auth_string.encode("utf-8")
         auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
 
         return {
-            "Authorization": f"Basic {auth_b64}",
+            AUTHORIZATION_HEADER: f"{BASIC_AUTH_PREFIX} {auth_b64}",
             "Content-Type": "application/json",
         }
 
@@ -116,7 +130,7 @@ class LCUClient(BaseHTTPClient):
         endpoint: str,
         method: str = "GET",
         body: Optional[Dict[str, Any]] = None,
-        retries: int = 3,
+        retries: int = DEFAULT_RETRY_COUNT,
         lockfile_path: Optional[str] = None,
     ) -> Any:
         """Make authenticated request to LCU API.
@@ -143,7 +157,7 @@ class LCUClient(BaseHTTPClient):
 
         port = credentials["port"]
         password = credentials["password"]
-        url = f"https://127.0.0.1:{port}{endpoint}"
+        url = LCU_BASE_URL_PATTERN.format(host=RIOT_REPLAY_API_HOST, port=port) + endpoint
         headers = self._create_auth_headers(password)
 
         try:

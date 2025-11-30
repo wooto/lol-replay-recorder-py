@@ -1,5 +1,6 @@
 import asyncio
 import os
+import platform
 from typing import Any, Dict, Optional
 
 from ..models.summoner import Summoner
@@ -7,6 +8,32 @@ from ..domain.errors import CustomError
 from ..clients.http.lcu import LCUClient
 from ..services.process.platform import PlatformResolver
 from ..utils.utils import sleep_in_seconds, refine_region
+from ..constants import (
+    PLATFORM_WINDOWS,
+    PLATFORM_DARWIN,
+    DEFAULT_WINDOWS_INSTALL_PATH,
+    MAC_LEAGUE_CLIENT_PATH,
+    MAC_USER_LEAGUE_CLIENT_PATH,
+    DEFAULT_RETRY_COUNT,
+)
+# Import constants after path fix
+try:
+    from .constants import (
+        LEAGUE_CLIENT_WINDOW_TITLE,
+        LCUX_DEFAULT_RETRIES,
+        LCUX_MAX_ATTEMPTS,
+        LCUX_DEFAULT_RETRIES_REGION,
+        LCUX_DEFAULT_RETRIES_HIGHLIGHTS,
+        LCU_HIGHLIGHTS_FOLDER_PATH_ENDPOINT,
+    )
+except ImportError:
+    # Fallback values if constants file has issues
+    LEAGUE_CLIENT_WINDOW_TITLE = "League Client"
+    LCUX_DEFAULT_RETRIES = 3
+    LCUX_MAX_ATTEMPTS = 30
+    LCUX_DEFAULT_RETRIES_REGION = 3
+    LCUX_DEFAULT_RETRIES_HIGHLIGHTS = 3
+    LCU_HIGHLIGHTS_FOLDER_PATH_ENDPOINT = "/lol-highlights/v1/highlights-folder-path"
 from .window_handler import WindowHandler
 
 
@@ -64,7 +91,7 @@ class LeagueClientUx:
         endpoint: str,
         method: str = "GET",
         body: Optional[Dict[str, Any]] = None,
-        retries: int = 3,
+        retries: int = DEFAULT_RETRY_COUNT,
     ) -> Any:
         """Make LCU request using the LCU client."""
         client = self._ensure_lcu_client()
@@ -83,8 +110,8 @@ class LeagueClientUx:
         region = refine_region(params["region"]).upper()
         locale = params["locale"]
 
-        if system == "Windows":
-            exe_path = r"C:\Riot Games\League of Legends\LeagueClient.exe"
+        if system == PLATFORM_WINDOWS:
+            exe_path = DEFAULT_WINDOWS_INSTALL_PATH + "\\LeagueClient.exe"
             cmd_args = [
                 exe_path,
                 f"--region={region}",
