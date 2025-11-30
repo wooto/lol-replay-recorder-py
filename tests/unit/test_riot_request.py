@@ -5,6 +5,7 @@ from lol_replay_recorder.models.custom_error import CustomError
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_make_request_success():
     mock_response = AsyncMock()
     mock_response.status_code = 200
@@ -17,6 +18,7 @@ async def test_make_request_success():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_make_request_404_raises_custom_error():
     mock_response = AsyncMock()
     mock_response.status_code = 404
@@ -29,6 +31,7 @@ async def test_make_request_404_raises_custom_error():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_make_request_retries_on_failure():
     mock_response = AsyncMock()
     mock_response.status_code = 500

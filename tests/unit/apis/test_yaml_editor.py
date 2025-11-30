@@ -21,6 +21,7 @@ settings:
     return str(yaml_file)
 
 
+@pytest.mark.unit
 def test_yaml_editor_loads_file(temp_yaml_file):
     editor = YamlEditor(temp_yaml_file)
     assert editor.filename == temp_yaml_file
@@ -28,18 +29,21 @@ def test_yaml_editor_loads_file(temp_yaml_file):
     assert editor.data["locale_data"]["default_locale"] == "en_US"
 
 
+@pytest.mark.unit
 def test_yaml_editor_update_nested_path(temp_yaml_file):
     editor = YamlEditor(temp_yaml_file)
     editor.update("locale_data.default_locale", "ko_KR")
     assert editor.data["locale_data"]["default_locale"] == "ko_KR"
 
 
+@pytest.mark.unit
 def test_yaml_editor_update_creates_missing_keys(temp_yaml_file):
     editor = YamlEditor(temp_yaml_file)
     editor.update("new_section.new_key", "new_value")
     assert editor.data["new_section"]["new_key"] == "new_value"
 
 
+@pytest.mark.unit
 def test_yaml_editor_save_changes(temp_yaml_file):
     editor = YamlEditor(temp_yaml_file)
     editor.update("settings.locale", "ja_JP")
@@ -50,6 +54,7 @@ def test_yaml_editor_save_changes(temp_yaml_file):
     assert editor2.data["settings"]["locale"] == "ja_JP"
 
 
+@pytest.mark.unit
 def test_yaml_editor_handles_nonexistent_file():
     with pytest.raises(Exception) as exc_info:
         YamlEditor("/nonexistent/path/file.yaml")

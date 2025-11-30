@@ -7,6 +7,7 @@ from lol_replay_recorder.controllers.window_handler import (
 )
 
 
+@pytest.mark.unit
 def test_key_enum_has_expected_values():
     assert Key.Escape == 0
     assert Key.Num1 == 29
@@ -14,6 +15,7 @@ def test_key_enum_has_expected_values():
     assert Key.Enter == 102
 
 
+@pytest.mark.unit
 def test_region_initialization():
     region = Region(10, 20, 800, 600)
     assert region.left == 10
@@ -22,12 +24,14 @@ def test_region_initialization():
     assert region.height == 600
 
 
+@pytest.mark.unit
 def test_region_area():
     region = Region(0, 0, 100, 50)
     assert region.area() == 5000
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_window_handler_keyboard_type():
     handler = WindowHandler()
 
@@ -40,6 +44,7 @@ async def test_window_handler_keyboard_type():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_window_handler_focus_window():
     handler = WindowHandler()
 

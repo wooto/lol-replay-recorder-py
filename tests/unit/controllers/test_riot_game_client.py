@@ -15,6 +15,7 @@ def riot_client():
     return RiotGameClient()
 
 
+@pytest.mark.unit
 def test_riot_game_client_initialization(riot_client):
     """Test RiotGameClient initialization."""
     assert riot_client.riot_client_services_path == '"C:\\Riot Games\\Riot Client\\RiotClientServices.exe"'
@@ -22,6 +23,7 @@ def test_riot_game_client_initialization(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_is_running(riot_client):
     """Test checking if Riot client is running."""
     mock_response = {"action": "running"}
@@ -32,6 +34,7 @@ async def test_is_running(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_login(riot_client):
     """Test login functionality."""
     with patch.object(riot_client, 'focus_client_window') as mock_focus:
@@ -51,6 +54,7 @@ async def test_login(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_is_auto_login_enabled(riot_client):
     """Test checking if auto login is enabled."""
     mock_response = {"enabled": True}
@@ -61,6 +65,7 @@ async def test_is_auto_login_enabled(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_state(riot_client):
     """Test getting client state."""
     mock_response = {"action": "launched"}
@@ -71,6 +76,7 @@ async def test_get_state(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_installs(riot_client):
     """Test getting installation information."""
     mock_response = {"installs": [{"product": "league_of_legends"}]}
@@ -81,6 +87,7 @@ async def test_get_installs(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_client_path(riot_client):
     """Test getting client installation path."""
     # Test with existing path
@@ -95,6 +102,7 @@ async def test_get_client_path(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_remove_lockfile(riot_client):
     """Test removing lockfile."""
     mock_lockfile_path = "C:\\path\\to\\lockfile"
@@ -112,6 +120,7 @@ async def test_remove_lockfile(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_lockfile_path(riot_client):
     """Test getting lockfile path."""
     with patch.dict(os.environ, {'LOCALAPPDATA': 'C:\\Users\\Test\\AppData\\Local'}):
@@ -120,6 +129,7 @@ async def test_get_lockfile_path(riot_client):
         assert result == str(expected)
 
 
+@pytest.mark.unit
 def test_get_lockfile_credentials(riot_client):
     """Test extracting credentials from lockfile."""
     mock_lockfile_content = "process:123:5678:password:other"
@@ -131,6 +141,7 @@ def test_get_lockfile_credentials(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_start_riot_client(riot_client):
     """Test starting Riot client."""
     mock_region = "NA"
@@ -157,6 +168,7 @@ async def test_start_riot_client(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_wait_to_patch(riot_client):
     """Test waiting for patching to complete."""
     mock_status_response = {"patch": {"state": "up_to_date", "progress": {"progress": 100}}}
@@ -167,6 +179,7 @@ async def test_wait_to_patch(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_wait_to_patch_with_progress(riot_client):
     """Test waiting for patching with progress updates."""
     mock_in_progress = {"patch": {"state": "patching", "progress": {"progress": 50}}}
@@ -181,6 +194,7 @@ async def test_wait_to_patch_with_progress(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_region_locale(riot_client):
     """Test getting region and locale information."""
     mock_response = {"locale": "en_US", "region": "na"}
@@ -192,6 +206,7 @@ async def test_get_region_locale(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_focus_client_window(riot_client):
     """Test focusing Riot client window."""
     with patch.object(riot_client, '_get_window_handler') as mock_handler:
@@ -204,6 +219,7 @@ async def test_focus_client_window(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_wait_for_lockfile_exists(riot_client):
     """Test waiting for lockfile to exist."""
     mock_path = "test_lockfile"
@@ -221,6 +237,7 @@ async def test_wait_for_lockfile_exists(riot_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_invoke_riot_request(riot_client):
     """Test making authenticated requests to Riot client."""
     mock_lockfile_path = "test_lockfile"
@@ -252,6 +269,7 @@ async def test_invoke_riot_request(riot_client):
                 assert call_args[4] == 1
 
 
+@pytest.mark.unit
 def test_get_window_handler(riot_client):
     """Test getting window handler instance."""
     handler = riot_client._get_window_handler()

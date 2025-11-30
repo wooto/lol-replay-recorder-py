@@ -52,12 +52,14 @@ class TestLeagueClientUx:
         with patch('lol_replay_recorder.controllers.window_handler._get_pygetwindow') as mock:
             yield mock
 
+    @pytest.mark.unit
     def test_init(self, league_client_ux):
         """Test LeagueClientUx initialization."""
         assert league_client_ux.patch == ""
         assert league_client_ux.lockfile_path == "/test/lockfile"
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_lockfile_path_windows(self):
         """Test getting lockfile path on Windows."""
         client = LeagueClientUx()
@@ -69,6 +71,7 @@ class TestLeagueClientUx:
                     assert lockfile_path == expected_path
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_lockfile_path_unix(self):
         """Test getting lockfile path on Unix systems."""
         client = LeagueClientUx()
@@ -79,6 +82,7 @@ class TestLeagueClientUx:
                 assert lockfile_path == expected_path
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_remove_lockfile_success(self, mock_lockfile_path):
         """Test successful lockfile removal."""
         league_client_ux = LeagueClientUx(lockfile_path=mock_lockfile_path)
@@ -92,6 +96,7 @@ class TestLeagueClientUx:
         assert not os.path.exists(mock_lockfile_path)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_remove_lockfile_not_exists(self, league_client_ux):
         """Test removing non-existent lockfile (should not raise error)."""
         league_client_ux.lockfile_path = "/non/existent/path.lock"
@@ -100,6 +105,7 @@ class TestLeagueClientUx:
         await league_client_ux.remove_lockfile()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_wait_for_client_to_be_ready_success(self, league_client_ux, mock_lcu_request):
         """Test successful client readiness check."""
         mock_lcu_request.return_value = {"action": "Idle"}
@@ -116,6 +122,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_wait_for_client_to_be_ready_timeout(self, league_client_ux, mock_lcu_request):
         """Test client readiness check timeout."""
         mock_lcu_request.side_effect = Exception("Client not ready")
@@ -124,6 +131,7 @@ class TestLeagueClientUx:
             await league_client_ux.wait_for_client_to_be_ready()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_highlights_folder_path(self, league_client_ux, mock_lcu_request):
         """Test getting highlights folder path."""
         expected_path = "C:\\Highlights"
@@ -141,6 +149,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_game_settings(self, league_client_ux, mock_lcu_request):
         """Test getting game settings."""
         expected_settings = {"General": {"WindowMode": 1}}
@@ -155,6 +164,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_input_settings(self, league_client_ux, mock_lcu_request):
         """Test getting input settings."""
         expected_settings = {"Camera": {"MovementSpeed": 50}}
@@ -169,6 +179,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_region_locale(self, league_client_ux, mock_lcu_request):
         """Test getting region and locale."""
         expected_data = {"region": "na", "locale": "en_US"}
@@ -184,6 +195,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_patch_game_settings(self, league_client_ux, mock_lcu_request):
         """Test patching game settings."""
         settings_resource = {"General": {"WindowMode": 0}}
@@ -201,6 +213,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_save_game_settings(self, league_client_ux, mock_lcu_request):
         """Test saving game settings."""
         mock_lcu_request.return_value = True
@@ -215,6 +228,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_disable_window_mode_success(self, league_client_ux, mock_lcu_request):
         """Test successfully disabling window mode."""
         mock_lcu_request.side_effect = [
@@ -228,6 +242,7 @@ class TestLeagueClientUx:
         assert mock_lcu_request.call_count == 2
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_disable_window_mode_failure(self, league_client_ux, mock_lcu_request):
         """Test failing to disable window mode."""
         mock_lcu_request.side_effect = [
@@ -239,6 +254,7 @@ class TestLeagueClientUx:
             await league_client_ux.disable_window_mode()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_enable_window_mode_success(self, league_client_ux, mock_lcu_request):
         """Test successfully enabling window mode."""
         mock_lcu_request.side_effect = [
@@ -252,6 +268,7 @@ class TestLeagueClientUx:
         assert mock_lcu_request.call_count == 2
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_replay_config(self, league_client_ux, mock_lcu_request):
         """Test getting replay configuration."""
         expected_config = {"downloadLocation": "C:\\Replays"}
@@ -266,6 +283,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_replay_metadata(self, league_client_ux, mock_lcu_request):
         """Test getting replay metadata."""
         match_id = "NA1_123456789"
@@ -281,6 +299,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_rofls_path(self, league_client_ux, mock_lcu_request):
         """Test getting ROFLs path."""
         expected_path = "C:\\Riot Games\\League of Legends\\Replays"
@@ -295,6 +314,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_download_replay_success(self, league_client_ux, mock_lcu_request):
         """Test successful replay download."""
         match_id = "NA1_123456789"
@@ -313,6 +333,7 @@ class TestLeagueClientUx:
         assert mock_lcu_request.call_count == 4
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_download_replay_failure(self, league_client_ux, mock_lcu_request):
         """Test failed replay download."""
         match_id = "NA1_123456789"
@@ -326,6 +347,7 @@ class TestLeagueClientUx:
             await league_client_ux.download_replay(match_id)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_launch_replay(self, league_client_ux, mock_lcu_request):
         """Test launching replay."""
         match_id = "NA1_123456789"
@@ -351,6 +373,7 @@ class TestLeagueClientUx:
             )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_end_of_match_data(self, league_client_ux, mock_lcu_request):
         """Test getting end of match data."""
         match_id = "NA1_123456789"
@@ -366,6 +389,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_summoners_by_riot_id(self, league_client_ux, mock_lcu_request):
         """Test getting summoners by Riot ID."""
         riot_id = "Player#1234"
@@ -381,6 +405,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_match_history_by_puuid(self, league_client_ux, mock_lcu_request):
         """Test getting match history by PUUID."""
         puuid = "test-puuid-123"
@@ -401,6 +426,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_match_timeline_by_match_id(self, league_client_ux, mock_lcu_request):
         """Test getting match timeline by match ID."""
         match_id = "NA1_123456789"
@@ -417,6 +443,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_patch_version_cached(self, league_client_ux):
         """Test getting patch version when cached."""
         league_client_ux.patch = "13.5"
@@ -426,6 +453,7 @@ class TestLeagueClientUx:
         assert result == "13.5"
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_patch_version_not_cached(self, league_client_ux, mock_lcu_request):
         """Test getting patch version when not cached."""
         expected_patch = "13.5.321.1234"
@@ -441,6 +469,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_state(self, league_client_ux, mock_lcu_request):
         """Test getting client state."""
         expected_state = {"action": "Idle"}
@@ -458,6 +487,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_queues(self, league_client_ux, mock_lcu_request):
         """Test getting game queues."""
         expected_queues = [{"queueId": 420, "name": "Ranked Solo/Duo"}]
@@ -472,6 +502,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_current_summoner(self, league_client_ux, mock_lcu_request):
         """Test getting current summoner."""
         summoner_data = {
@@ -493,6 +524,7 @@ class TestLeagueClientUx:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_start_client_windows(self, mock_asyncio_create_subprocess):
         """Test starting League client on Windows."""
         client = LeagueClientUx()
@@ -519,6 +551,7 @@ class TestLeagueClientUx:
             assert any("--locale=en_US" in str(arg) for arg in args)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_start_client_macos(self, mock_asyncio_create_subprocess):
         """Test starting League client on macOS."""
         client = LeagueClientUx()
@@ -541,6 +574,7 @@ class TestLeagueClientUx:
                 assert "League of Legends.app" in call_args[0] or "LeagueClient" in call_args[0]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_focus_client_window_success(self, mock_pygetwindow):
         """Test successfully focusing client window."""
         league_client_ux = LeagueClientUx()
@@ -559,6 +593,7 @@ class TestLeagueClientUx:
             mock_gw_module.getWindowsWithTitle.assert_called_once_with("League of Legends")
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_focus_client_window_failure(self, mock_pygetwindow):
         """Test failing to focus client window."""
         league_client_ux = LeagueClientUx()

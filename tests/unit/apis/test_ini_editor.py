@@ -18,6 +18,7 @@ ShowTimestamps=1
     return str(ini_file)
 
 
+@pytest.mark.unit
 def test_ini_editor_loads_file(temp_ini_file):
     editor = IniEditor(temp_ini_file)
     assert editor.filename == temp_ini_file
@@ -25,12 +26,14 @@ def test_ini_editor_loads_file(temp_ini_file):
     assert editor.data["General"]["EnableReplayApi"] == "1"
 
 
+@pytest.mark.unit
 def test_ini_editor_update_section(temp_ini_file):
     editor = IniEditor(temp_ini_file)
     editor.update_section("General", "EnableReplayApi", "0")
     assert editor.data["General"]["EnableReplayApi"] == "0"
 
 
+@pytest.mark.unit
 def test_ini_editor_create_new_section(temp_ini_file):
     editor = IniEditor(temp_ini_file)
     editor.update_section("NewSection", "NewKey", "NewValue")
@@ -38,6 +41,7 @@ def test_ini_editor_create_new_section(temp_ini_file):
     assert editor.data["NewSection"]["NewKey"] == "NewValue"
 
 
+@pytest.mark.unit
 def test_ini_editor_save(temp_ini_file):
     editor = IniEditor(temp_ini_file)
     editor.update_section("General", "EnableReplayApi", "0")
@@ -48,6 +52,7 @@ def test_ini_editor_save(temp_ini_file):
     assert editor2.data["General"]["EnableReplayApi"] == "0"
 
 
+@pytest.mark.unit
 def test_ini_editor_handles_nonexistent_file():
     with pytest.raises(Exception) as exc_info:
         IniEditor("/nonexistent/path/file.ini")
