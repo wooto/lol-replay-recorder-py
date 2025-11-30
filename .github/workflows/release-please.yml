@@ -18,3 +18,4 @@ jobs:
         with:
           release-type: python
           token: ${{ secrets.GH_PAT }}
+          config-file: .github/release-please-config.json
