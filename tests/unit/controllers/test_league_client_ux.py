@@ -137,16 +137,22 @@ class TestLeagueClientUx:
         expected_path = "C:\\Highlights"
         mock_lcu_request.return_value = expected_path
 
-        result = await league_client_ux.get_highlights_folder_path()
+        # Mock the LCU client to avoid actual lockfile reading
+        with patch.object(league_client_ux, '_ensure_lcu_client') as mock_ensure:
+            mock_lcu_client = MagicMock()
+            mock_lcu_client.request = AsyncMock(return_value=expected_path)
+            mock_ensure.return_value = mock_lcu_client
 
-        assert result == expected_path
-        mock_lcu_request.assert_called_once_with(
-            "/test/lockfile",
-            '/lol-highlights/v1/highlights-folder-path',
-            'GET',
-            None,
-            3
-        )
+            result = await league_client_ux.get_highlights_folder_path()
+
+            assert result == expected_path
+            mock_ensure.assert_called_once()
+            mock_lcu_client.request.assert_called_once_with(
+                '/lol-highlights/v1/highlights-folder-path',
+                'GET',
+                None,
+                3
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -305,13 +311,22 @@ class TestLeagueClientUx:
         expected_path = "C:\\Riot Games\\League of Legends\\Replays"
         mock_lcu_request.return_value = expected_path
 
-        result = await league_client_ux.get_rofls_path()
+        # Mock the LCU client to avoid actual lockfile reading
+        with patch.object(league_client_ux, '_ensure_lcu_client') as mock_ensure:
+            mock_lcu_client = MagicMock()
+            mock_lcu_client.request = AsyncMock(return_value=expected_path)
+            mock_ensure.return_value = mock_lcu_client
 
-        assert result == expected_path
-        mock_lcu_request.assert_called_once_with(
-            "/test/lockfile",
-            '/lol-replays/v1/rofls/path'
-        )
+            result = await league_client_ux.get_rofls_path()
+
+            assert result == expected_path
+            mock_ensure.assert_called_once()
+            mock_lcu_client.request.assert_called_once_with(
+                '/lol-replays/v1/rofls/path',
+                'GET',
+                None,
+                3
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.unit

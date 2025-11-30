@@ -238,14 +238,14 @@ class LeagueClient:
         """
         return self.platform_resolver.get_product_settings_path()
 
-    async def get_config_file_paths(self) -> List[str]:
+    def get_config_file_paths(self) -> List[str]:
         """
         Get all game.cfg file paths from installed locations.
 
         Returns:
             List of config file paths
         """
-        installed_paths = await self.get_installed_paths()
+        installed_paths = self.get_installed_paths()
         config_paths = []
 
         for install_path in installed_paths:

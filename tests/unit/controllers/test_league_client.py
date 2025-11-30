@@ -199,22 +199,19 @@ class TestLeagueClient:
                 with patch('asyncio.sleep', new_callable=AsyncMock):
                     await league_client.stop_riot_processes()
 
-    @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_get_installed_paths(self, league_client):
+    def test_get_installed_paths(self, league_client):
         """Test getting installed paths."""
-        with patch('platform.system', return_value='Windows'):
-            with patch.object(league_client.platform_resolver, '_find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
-                paths = league_client.get_installed_paths()
-                assert paths == ["C:\\Riot Games\\League of Legends"]
+        with patch.object(league_client.platform_resolver, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
+            paths = league_client.get_installed_paths()
+            assert paths == ["C:\\Riot Games\\League of Legends"]
 
-    @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_get_config_file_paths(self, league_client):
+    def test_get_config_file_paths(self, league_client):
         """Test getting config file paths."""
         with patch.object(league_client.platform_resolver, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
             with patch.object(league_client.platform_resolver, 'get_config_file_path', return_value="C:\\Riot Games\\League of Legends\\Config\\game.cfg"):
-                paths = await league_client.get_config_file_paths()
+                paths = league_client.get_config_file_paths()
                 assert paths == ["C:\\Riot Games\\League of Legends\\Config\\game.cfg"]
 
     @pytest.mark.asyncio
@@ -335,7 +332,8 @@ class TestLeagueClient:
     @pytest.mark.unit
     def test_get_product_settings_path_windows(self, league_client):
         """Test getting product settings path on Windows."""
-        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
+        with patch.object(league_client.platform_resolver, 'get_product_settings_path',
+                        return_value="C:\\ProgramData\\Riot Games\\Metadata\\league_of_legends.live\\league_of_legends.live.product_settings.yaml"):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
             assert "ProgramData" in path
