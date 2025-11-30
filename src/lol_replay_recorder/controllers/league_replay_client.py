@@ -1,9 +1,29 @@
 import os
 from typing import Any
-from ..models.riot_request import make_request
-from ..models.replay_type import RecordingProperties, RenderProperties, GameData
-from ..models.custom_error import CustomError
+
+from ..domain.types import RecordingProperties, RenderProperties, GameData
+from ..domain.errors import CustomError
+from ..clients.http.riot import RiotAPIClient
 from ..utils.utils import sleep_in_seconds
+# Import constants after path fix
+try:
+    from .constants import (
+        REPLAY_ASSETS_WAIT_TIMEOUT,
+        CAMERA_FOCUS_DELAY_TIME,
+        CHAOS_TEAM_PLAYERS_START,
+        CAMERA_FOCUS_RETRY_COUNT,
+        CAMERA_FOCUS_KEY_PRESS_COUNT,
+        CAMERA_FOCUS_KEY_PRESS_INTERVAL,
+        CAMERA_FOCUS_VERIFICATION_DELAY,
+    )
+except ImportError:
+    # Fallback values if constants file has issues
+    from ..constants import REPLAY_ASSETS_WAIT_TIMEOUT, CHAOS_TEAM_PLAYERS_START
+    CAMERA_FOCUS_DELAY_TIME = 0.5
+    CAMERA_FOCUS_RETRY_COUNT = 10
+    CAMERA_FOCUS_KEY_PRESS_COUNT = 50
+    CAMERA_FOCUS_KEY_PRESS_INTERVAL = 0.2
+    CAMERA_FOCUS_VERIFICATION_DELAY = 10.0
 from .window_handler import WindowHandler, Key
 
 # Disable SSL warnings for self-signed certs
@@ -14,7 +34,7 @@ class LeagueReplayClient:
     """Client for interacting with League of Legends Replay API."""
 
     def __init__(self) -> None:
-        self.url = "https://127.0.0.1:2999"
+        self.api_client = RiotAPIClient()
         self.pid: int | None = None
 
     async def init(self) -> None:
@@ -34,7 +54,7 @@ class LeagueReplayClient:
         if self.pid:
             return self.pid
 
-        replay_data = await make_request("GET", f"{self.url}/replay/game")
+        replay_data = await self.api_client.request("/replay/game")
         if replay_data and "processID" in replay_data:
             self.pid = replay_data["processID"]
 
@@ -52,27 +72,27 @@ class LeagueReplayClient:
 
     async def get_playback_properties(self) -> dict[str, Any]:
         """Get current playback properties."""
-        return await make_request("GET", f"{self.url}/replay/playback")
+        return await self.api_client.request("/replay/playback")
 
     async def post_playback_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update playback properties."""
-        return await make_request("POST", f"{self.url}/replay/playback", body=options)
+        return await self.api_client.request("/replay/playback", method="POST", body=options)
 
     async def get_recording_properties(self) -> RecordingProperties:
         """Get current recording properties."""
-        return await make_request("GET", f"{self.url}/replay/recording")
+        return await self.api_client.request("/replay/recording")
 
     async def post_recording_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update recording properties."""
-        return await make_request("POST", f"{self.url}/replay/recording", body=options)
+        return await self.api_client.request("/replay/recording", method="POST", body=options)
 
     async def get_render_properties(self) -> RenderProperties:
         """Get current render properties."""
-        return await make_request("GET", f"{self.url}/replay/render")
+        return await self.api_client.request("/replay/render")
 
     async def post_render_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update render properties."""
-        return await make_request("POST", f"{self.url}/replay/render", body=options)
+        return await self.api_client.request("/replay/render", method="POST", body=options)
 
     async def load(self, timeout: int, num_retries: int) -> None:
         """Load replay and wait for it to be ready."""
@@ -100,13 +120,13 @@ class LeagueReplayClient:
         await self.wait_for_assets_to_load()
 
     async def wait_for_assets_to_load(self) -> None:
-        """Wait for replay assets to load (time >= 15 or paused)."""
+        """Wait for replay assets to load (time >= REPLAY_ASSETS_WAIT_TIMEOUT or paused)."""
         while True:
             playback_state = await self.get_playback_properties()
             time = playback_state.get("time", 0)
             paused = playback_state.get("paused", False)
 
-            if time >= 15 or paused:
+            if time >= REPLAY_ASSETS_WAIT_TIMEOUT or paused:
                 break
 
     async def wait_for_recording_to_finish(self, time: int) -> None:
@@ -126,7 +146,7 @@ class LeagueReplayClient:
 
     async def get_all_game_data(self) -> GameData:
         """Get all game data."""
-        return await make_request("GET", f"{self.url}/liveclientdata/allgamedata")
+        return await self.api_client.request("/liveclientdata/allgamedata")
 
     async def get_in_game_position_by_summoner_name(self, summoner_name: str) -> int:
         """Get player position index by summoner name (0-9)."""
@@ -145,7 +165,7 @@ class LeagueReplayClient:
         # Check CHAOS team
         for i, player in enumerate(chaos_team):
             if player.get("riotIdGameName") == summoner_name:
-                return i + 5
+                return i + CHAOS_TEAM_PLAYERS_START
 
         raise CustomError("Summoner not found in game")
 
@@ -162,16 +182,16 @@ class LeagueReplayClient:
 
         handler = WindowHandler()
 
-        for i in range(10):
+        for i in range(CAMERA_FOCUS_RETRY_COUNT):
             # Focus League of Legends window
             await handler.focus_client_window("League of Legends")
 
-            # Press key 50 times
-            for j in range(50):
+            # Press key CAMERA_FOCUS_KEY_PRESS_COUNT times
+            for j in range(CAMERA_FOCUS_KEY_PRESS_COUNT):
                 await handler.keyboard_type(keyboard_key)
-                await sleep_in_seconds(0.2)
+                await sleep_in_seconds(CAMERA_FOCUS_KEY_PRESS_INTERVAL)
 
-            await sleep_in_seconds(10)
+            await sleep_in_seconds(CAMERA_FOCUS_VERIFICATION_DELAY)
 
             # Verify selection
             render_props = await self.get_render_properties()

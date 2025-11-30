@@ -1,5 +1,6 @@
 import configparser
 from typing import Any
+from ..domain.errors import ConfigError
 
 
 class IniEditor:
@@ -23,12 +24,12 @@ class IniEditor:
 
             # Check if file was successfully read
             if not result:
-                raise Exception(f"Failed to read INI file: {self.filename}")
+                raise ConfigError(f"Failed to read INI file: {self.filename}")
 
             # Convert to dict for easier manipulation
             return {section: dict(config[section]) for section in config.sections()}
         except Exception as e:
-            raise Exception(f"Failed to load INI file: {str(e)}")
+            raise ConfigError(f"Failed to load INI file: {str(e)}")
 
     def save(self) -> None:
         """Save current data back to INI file."""

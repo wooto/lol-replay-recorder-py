@@ -1,5 +1,6 @@
 import yaml
 from typing import Any
+from ..domain.errors import ConfigError
 
 
 class YamlEditor:
@@ -15,7 +16,7 @@ class YamlEditor:
             with open(self.filename, "r", encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
-            raise Exception(f"Failed to load YAML file: {str(e)}")
+            raise ConfigError(f"Failed to load YAML file: {str(e)}")
 
     def _save_yaml(self) -> None:
         """Save current data back to YAML file."""
@@ -24,7 +25,7 @@ class YamlEditor:
                 yaml.dump(self.data, f, default_flow_style=False, allow_unicode=True)
             print(f"YAML file saved to {self.filename}")
         except Exception as e:
-            raise Exception(f"Failed to save YAML file: {str(e)}")
+            raise ConfigError(f"Failed to save YAML file: {str(e)}")
 
     def update(self, path: str, value: Any) -> None:
         """Update a nested value using dot notation path."""

@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-from lol_replay_recorder.models.riot_request import make_request
-from lol_replay_recorder.models.custom_error import CustomError
+from unittest.mock import AsyncMock, MagicMock, patch
+from lol_replay_recorder.clients.http.riot import RiotAPIClient
+from lol_replay_recorder.domain.errors import CustomError, HTTPError
+from lol_replay_recorder.models import make_request
 
 
 @pytest.mark.asyncio
@@ -10,7 +11,7 @@ async def test_make_request_success():
     mock_response = AsyncMock()
     mock_response.status_code = 200
     mock_response.is_success = True
-    mock_response.json = AsyncMock(return_value={"data": "test"})
+    mock_response.json = MagicMock(return_value={"data": "test"})
 
     with patch("httpx.AsyncClient.request", return_value=mock_response):
         result = await make_request("GET", "https://127.0.0.1:2999/test")
@@ -19,15 +20,17 @@ async def test_make_request_success():
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_make_request_404_raises_custom_error():
+async def test_make_request_404_raises_http_error():
     mock_response = AsyncMock()
     mock_response.status_code = 404
     mock_response.is_success = False
 
     with patch("httpx.AsyncClient.request", return_value=mock_response):
-        with pytest.raises(CustomError) as exc_info:
+        with pytest.raises(HTTPError) as exc_info:
             await make_request("GET", "https://127.0.0.1:2999/test", retries=0)
         assert "Failed to find the requested resource" in str(exc_info.value)
+        assert exc_info.value.status_code == 404
+        assert exc_info.value.url == "https://127.0.0.1:2999/test"
 
 
 @pytest.mark.asyncio

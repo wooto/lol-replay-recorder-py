@@ -11,9 +11,11 @@ from lol_replay_recorder.controllers.riot_game_client import RiotGameClient
 from lol_replay_recorder.controllers.league_replay_client import LeagueReplayClient
 from lol_replay_recorder.models.locale import Locale
 from lol_replay_recorder.models.riot_types import Region, PlatformId
-from lol_replay_recorder.models.custom_error import CustomError
-from lol_replay_recorder.apis.yaml_editor import YamlEditor
-from lol_replay_recorder.apis.ini_editor import IniEditor
+from lol_replay_recorder.domain.errors import CustomError
+from lol_replay_recorder.services.config.game_settings import GameSettingsManager
+from lol_replay_recorder.services.process.platform import PlatformResolver
+from lol_replay_recorder.services.config.editors.yaml import YamlEditor
+from lol_replay_recorder.services.config.editors.ini import IniEditor
 
 
 class TestLeagueClient:
@@ -79,6 +81,22 @@ class TestLeagueClient:
         assert league_client.riot_game_client is None
         assert league_client.league_client_ux is None
         assert league_client.league_replay_client is None
+        assert league_client._game_settings_manager is None
+
+    @pytest.mark.unit
+    def test_get_game_settings_manager_lazy_initialization(self, league_client):
+        """Test lazy initialization of GameSettingsManager."""
+        # Initially None
+        assert league_client._game_settings_manager is None
+
+        # Get manager triggers creation
+        manager = league_client._get_game_settings_manager()
+        assert manager is not None
+        assert isinstance(manager, GameSettingsManager)
+
+        # Second call returns same instance
+        manager2 = league_client._get_game_settings_manager()
+        assert manager is manager2
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -91,28 +109,20 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components
-        mock_riot_client = AsyncMock()
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "en_US", "region": "na"}
-        mock_league_ux.get_state.return_value = {"action": "Idle"}
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                await league_client.start_riot_processes_safely(params)
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes') as mock_stop:
-                    with patch.object(league_client, 'set_locale') as mock_set_locale:
-                        await league_client.start_riot_processes_safely(params)
+                # Verify set_locale was called with correct locale
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
-                        # Verify all steps were called
-                        mock_stop.assert_called_once()
-                        mock_set_locale.assert_called_once_with(Locale.en_US)
-                        mock_riot_client.start_riot_client.assert_called_once()
-                        mock_riot_client.login.assert_called_once_with("test_user", "test_pass", PlatformId.NA)
+                # Verify process manager's start_safely was called with params
+                mock_start_safely.assert_called_once_with(params)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_start_riot_processes_safely_retry_logic(self, league_client, mock_asyncio_subprocess):
-        """Test retry logic when starting Riot processes."""
+    async def test_start_riot_processes_safely_propagates_errors(self, league_client, mock_asyncio_subprocess):
+        """Test that errors from process manager are propagated."""
         params = {
             "region": PlatformId.NA,
             "locale": Locale.en_US,
@@ -120,29 +130,19 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components with failure then success
-        mock_riot_client = AsyncMock()
-        call_count = 0
-        async def mock_start_riot_client(*args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                raise Exception("Failed")
-            return None
-        mock_riot_client.start_riot_client.side_effect = mock_start_riot_client
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "en_US", "region": "na"}
-        mock_league_ux.get_state.side_effect = [{"action": "Busy"}, {"action": "Idle"}]
+        # Mock process manager to raise error
+        async def mock_start_safely_impl(*args, **kwargs):
+            raise Exception("Failed to start processes")
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes') as mock_stop:
-                    with patch.object(league_client, 'set_locale') as mock_set_locale:
-                        with patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
-                            await league_client.start_riot_processes_safely(params)
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                mock_start_safely.side_effect = mock_start_safely_impl
 
-                            # Should retry at least once
-                            assert mock_sleep.call_count >= 1
+                with pytest.raises(Exception, match="Failed to start processes"):
+                    await league_client.start_riot_processes_safely(params)
+
+                # Verify set_locale was called before error
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -155,36 +155,29 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components with wrong locale
-        mock_riot_client = AsyncMock()
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "ko_KR", "region": "na"}  # Wrong locale
-        mock_league_ux.get_state.return_value = {"action": "Idle"}
+        # Mock process manager to raise locale mismatch error
+        async def mock_start_safely_with_error(*args, **kwargs):
+            raise CustomError("Locale is not correct")
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes'):
-                    with patch.object(league_client, 'set_locale'):
-                        with pytest.raises(CustomError, match="Locale is not correct"):
-                            await league_client.start_riot_processes_safely(params)
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                mock_start_safely.side_effect = mock_start_safely_with_error
+
+                with pytest.raises(CustomError, match="Locale is not correct"):
+                    await league_client.start_riot_processes_safely(params)
+
+                # Verify set_locale was called before error
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_stop_riot_processes_windows(self, league_client, mock_subprocess):
-        """Test stopping Riot processes on Windows."""
-        with patch('platform.system', return_value='Windows'):
-            # Mock tasklist to show processes are running then not running
-            mock_subprocess.run.side_effect = [
-                MagicMock(returncode=0, stdout="RiotClientUx.exe\n"),  # First check - process running
-                MagicMock(returncode=1),  # Second check - process not found
-                MagicMock(returncode=0, stdout="LeagueClient.exe\n"),  # Third check - process running
-                MagicMock(returncode=1),  # Fourth check - process not found
-            ]
-
+    async def test_stop_riot_processes_windows(self, league_client):
+        """Test stopping Riot processes delegates to ProcessManager."""
+        with patch.object(league_client._process_manager, 'stop_riot_processes', new_callable=AsyncMock) as mock_stop:
             await league_client.stop_riot_processes()
 
-            # Should attempt to kill processes
-            assert mock_subprocess.run.call_count >= 2
+            # Verify ProcessManager's stop_riot_processes was called
+            mock_stop.assert_called_once()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -199,41 +192,19 @@ class TestLeagueClient:
                 with patch('asyncio.sleep', new_callable=AsyncMock):
                     await league_client.stop_riot_processes()
 
-    @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_find_windows_installed_success(self, league_client):
-        """Test finding Windows installation when League of Legends is installed."""
-        with patch('platform.system', return_value='Windows'):
-            with patch('os.path.exists', return_value=True):
-                paths = await league_client.find_windows_installed()
-                assert len(paths) == 3  # All three potential paths exist
-                assert all("League of Legends" in path for path in paths)
-
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_find_windows_installed_not_found(self, league_client):
-        """Test finding Windows installation when League of Legends is not installed."""
-        with patch('platform.system', return_value='Windows'):
-            with patch('os.path.exists', return_value=False):
-                paths = await league_client.find_windows_installed()
-                assert len(paths) == 0
-
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_get_installed_paths(self, league_client):
+    def test_get_installed_paths(self, league_client):
         """Test getting installed paths."""
-        with patch('platform.system', return_value='Windows'):
-            with patch.object(league_client, 'find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
-                paths = await league_client.get_installed_paths()
-                assert paths == ["C:\\Riot Games\\League of Legends"]
+        with patch.object(league_client.platform_resolver, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
+            paths = league_client.get_installed_paths()
+            assert paths == ["C:\\Riot Games\\League of Legends"]
 
-    @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_get_config_file_paths(self, league_client):
+    def test_get_config_file_paths(self, league_client):
         """Test getting config file paths."""
-        with patch.object(league_client, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
-            with patch.object(league_client, 'get_config_file_path', return_value="C:\\Riot Games\\League of Legends\\Config\\game.cfg"):
-                paths = await league_client.get_config_file_paths()
+        with patch.object(league_client.platform_resolver, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
+            with patch.object(league_client.platform_resolver, 'get_config_file_path', return_value="C:\\Riot Games\\League of Legends\\Config\\game.cfg"):
+                paths = league_client.get_config_file_paths()
                 assert paths == ["C:\\Riot Games\\League of Legends\\Config\\game.cfg"]
 
     @pytest.mark.asyncio
@@ -287,22 +258,19 @@ class TestLeagueClient:
         mock_ini_editor.return_value.update_section.assert_called_once_with("General", "EnableReplayApi", True)
         mock_ini_editor.return_value.save.assert_called_once()
 
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_get_game_input_ini_path_windows(self, league_client):
+    def test_get_game_input_ini_path_windows(self, league_client):
         """Test getting game input.ini path on Windows."""
-        with patch('platform.system', return_value='Windows'):
-            path = await league_client.get_game_input_ini_path()
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
+            path = league_client.get_game_input_ini_path()
             assert "input.ini" in path
             assert "Config" in path
 
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_get_game_input_ini_path_unix(self, league_client):
+    def test_get_game_input_ini_path_unix(self, league_client):
         """Test getting game input.ini path on Unix systems."""
-        with patch('platform.system', return_value='Darwin'):
-            path = await league_client.get_game_input_ini_path()
-            assert "input.ini" in path
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=False):
+            with patch.object(league_client.platform_resolver, 'is_macos', return_value=True):
+                path = league_client.get_game_input_ini_path()
+                assert "input.ini" in path
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -327,21 +295,45 @@ class TestLeagueClient:
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_set_locale_success(self, league_client, mock_yaml_editor):
-        """Test successfully setting locale."""
-        await league_client.set_locale("en_US")
-        mock_yaml_editor.return_value.update.assert_any_call("locale_data.default_locale", "en_US")
-        mock_yaml_editor.return_value.update.assert_any_call("settings.locale", "en_US")
-        mock_yaml_editor.return_value.save_changes.assert_called_once()
+    async def test_set_locale_success(self, league_client):
+        """Test successfully setting locale via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.set_locale("en_US")
+            mock_game_settings.set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_set_locale_invalid(self, league_client, mock_yaml_editor):
-        """Test setting invalid locale."""
-        mock_yaml_editor.return_value.data["locale_data"]["available_locales"] = ["en_US", "ko_KR"]
+    async def test_set_locale_invalid(self, league_client):
+        """Test setting locale when GameSettingsManager raises error."""
+        mock_game_settings = AsyncMock()
+        mock_game_settings.set_locale.side_effect = CustomError("Failed to set locale")
 
-        with pytest.raises(CustomError, match="Invalid locale"):
-            await league_client.set_locale("invalid_locale")
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            with pytest.raises(CustomError, match="Failed to set locale"):
+                await league_client.set_locale(Locale.en_US)
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_update_game_config(self, league_client):
+        """Test updating game configuration via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+        updates = {"General.EnableReplayApi": True, "General.WindowMode": "1"}
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.update_game_config(updates)
+            mock_game_settings.update_game_config.assert_called_once_with(updates)
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_set_window_mode(self, league_client):
+        """Test setting window mode via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.set_window_mode(True)
+            mock_game_settings.set_window_mode.assert_called_once_with(True)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -350,14 +342,15 @@ class TestLeagueClient:
         mock_window_handler = AsyncMock()
         league_client._window_handler = mock_window_handler
 
-        with patch('platform.system', return_value='Windows'):
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
             await league_client.focus_client_window()
             mock_window_handler.focus_client_window.assert_called_once_with("League of Legends (TM)")
 
     @pytest.mark.unit
     def test_get_product_settings_path_windows(self, league_client):
         """Test getting product settings path on Windows."""
-        with patch('platform.system', return_value='Windows'):
+        with patch.object(league_client.platform_resolver, 'get_product_settings_path',
+                        return_value="C:\\ProgramData\\Riot Games\\Metadata\\league_of_legends.live\\league_of_legends.live.product_settings.yaml"):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
             assert "ProgramData" in path
@@ -365,7 +358,7 @@ class TestLeagueClient:
     @pytest.mark.unit
     def test_get_product_settings_path_unix(self, league_client):
         """Test getting product settings path on Unix systems."""
-        with patch('platform.system', return_value='Darwin'):
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=False):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
             assert ".config" in path  # Unix systems use .config directory

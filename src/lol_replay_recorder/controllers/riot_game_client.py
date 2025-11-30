@@ -4,10 +4,12 @@ from base64 import b64encode
 from pathlib import Path
 from typing import Any, Dict, NamedTuple, Optional
 
-from ..models.locale import Locale
-from ..models.riot_request import make_request
-from ..models.riot_types import Region
+from ..domain.types import Locale
+from ..domain.types import Region
+from ..clients.http.riot import RiotAPIClient
+from ..services.process.platform import PlatformResolver
 from ..utils.utils import refine_region, sleep_in_seconds
+from ..domain.errors import ConfigError
 from .window_handler import Key, WindowHandler
 
 
@@ -26,9 +28,9 @@ class RegionLocale(NamedTuple):
 class RiotGameClient:
     """Controller for interacting with Riot Game Client."""
 
-    def __init__(self) -> None:
-        self.riot_client_services_path = '"C:\\Riot Games\\Riot Client\\RiotClientServices.exe"'
-        self.default_client_paths = ['C:\\Riot Games\\Riot Client']
+    def __init__(self, platform_resolver: Optional[PlatformResolver] = None) -> None:
+        self.platform_resolver = platform_resolver or PlatformResolver()
+        self.riot_client_services_path = self.platform_resolver.get_riot_client_executable_path()
         self._window_handler: Optional[WindowHandler] = None
 
     async def is_running(self) -> Dict[str, Any]:
@@ -103,7 +105,7 @@ class RiotGameClient:
 
     async def get_client_path(self) -> list[str]:
         """Get the path where Riot Client is installed."""
-        paths = self.default_client_paths
+        paths = self.platform_resolver.RIOT_CLIENT_WINDOWS_PATHS
         for path in paths:
             if os.path.exists(path):
                 return [path]
@@ -120,8 +122,7 @@ class RiotGameClient:
 
     async def get_lockfile_path(self) -> str:
         """Get the path to the Riot Client lockfile."""
-        local_app_data = os.environ.get('LOCALAPPDATA', '')
-        return str(Path(local_app_data) / 'Riot Games' / 'Riot Client' / 'Config' / 'lockfile')
+        return self.platform_resolver.get_riot_client_lockfile_path()
 
     def get_lockfile_credentials(self, path: str) -> LockfileCredentials:
         """Extract credentials from lockfile."""
@@ -211,7 +212,7 @@ class RiotGameClient:
 
         while not os.path.exists(file_path):
             if asyncio.get_event_loop().time() - start_time > timeout_seconds:
-                raise Exception('File not found')
+                raise ConfigError(f'File not found: {file_path}')
             await sleep_in_seconds(1)
 
     async def _invoke_riot_request(
@@ -237,12 +238,14 @@ class RiotGameClient:
             'Content-Type': 'application/json',
         }
 
-        response = await make_request(
-            method,
-            url,
-            headers,
-            body,
-            retry,
+        # Use RiotAPIClient for HTTP requests
+        client = RiotAPIClient(host='127.0.0.1', port=int(port))
+        response = await client.request_with_retry(
+            method=method,
+            url=url,
+            headers=headers,
+            body=body,
+            retries=retry,
         )
 
         return response

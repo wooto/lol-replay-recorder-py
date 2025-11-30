@@ -2,6 +2,8 @@ import asyncio
 from enum import IntEnum
 from typing import Any
 
+from .constants import WINDOW_FOCUS_RETRY_COUNT
+
 # Lazy imports to avoid DISPLAY dependency in headless CI environments
 def _get_pyautogui() -> Any:
     import os
@@ -250,7 +252,7 @@ class WindowHandler:
         """Perform left mouse click."""
         await asyncio.to_thread(_get_pyautogui().click)
 
-    async def focus_client_window(self, window_title: str, retry: int = 10) -> None:
+    async def focus_client_window(self, window_title: str, retry: int = WINDOW_FOCUS_RETRY_COUNT) -> None:
         """Focus a window by title."""
         gw = _get_pygetwindow()
         windows = gw.getWindowsWithTitle(window_title)
