@@ -48,31 +48,60 @@ pip install lol-replay-recorder
 rm -rf dist/
 ```
 
-## 자동 배포
+## 자동 배포 (Release-Please)
 
-main 브랜치에 PR이 머지되면:
+이 프로젝트는 [Release-Please](https://github.com/googleapis/release-please)를 사용하여 버전 관리 및 배포를 자동화합니다.
 
-1. CI 테스트 실행 (pytest, mypy, ruff)
-2. 테스트 통과 시 자동으로 patch 버전 증가 (0.1.0 → 0.1.1)
-3. 새 버전을 pyproject.toml과 __init__.py에 커밋
-4. Git 태그 생성 (v0.1.1)
-5. 패키지 빌드
-6. PyPI에 자동 업로드
+### 워크플로우
+
+1. **Conventional Commits으로 커밋**
+   ```bash
+   git commit -m "feat: add new camera control feature"
+   git commit -m "fix: resolve replay loading timeout"
+   git commit -m "docs: update installation guide"
+   ```
+
+2. **main 브랜치에 PR 머지**
+   - 일반적인 PR 프로세스 진행
+
+3. **Release-Please가 자동으로 Release PR 생성**
+   - PR 제목: "chore(main): release X.Y.Z"
+   - 변경사항:
+     - `pyproject.toml` 버전 업데이트
+     - `src/lol_replay_recorder/__init__.py` 버전 업데이트
+     - `CHANGELOG.md` 자동 생성/업데이트
+
+4. **Release PR 검토 및 머지**
+   - Release PR을 검토하고 머지
+   - 이 단계에서 릴리즈 시점을 제어 가능
+
+5. **자동 배포**
+   - GitHub Release 자동 생성
+   - Git 태그 생성 (v0.1.1)
+   - CI 테스트 실행
+   - PyPI에 자동 업로드
 
 ### 버전 관리
 
-- **Patch 버전**: 자동 증가 (매 PR 머지마다)
-- **Minor/Major 버전**: 수동으로 pyproject.toml 수정 후 PR
+Release-Please는 Conventional Commits을 분석하여 자동으로 버전을 결정합니다:
 
-예: 0.2.0으로 업데이트하려면
-```bash
-# pyproject.toml에서 version = "0.2.0"으로 수정
-# src/lol_replay_recorder/__init__.py에서 __version__ = "0.2.0"으로 수정
-git add pyproject.toml src/lol_replay_recorder/__init__.py
-git commit -m "chore: bump version to 0.2.0"
-```
+- `fix:` → Patch 버전 증가 (0.1.0 → 0.1.1)
+- `feat:` → Minor 버전 증가 (0.1.0 → 0.2.0)
+- `feat!:` 또는 `BREAKING CHANGE:` → Major 버전 증가 (0.1.0 → 1.0.0)
 
-다음 PR 머지 시 0.2.1로 자동 증가됨.
+#### Conventional Commit 타입
+
+- `feat:` - 새 기능
+- `fix:` - 버그 수정
+- `docs:` - 문서 변경
+- `style:` - 코드 포맷팅 (버전 변경 없음)
+- `refactor:` - 리팩토링
+- `test:` - 테스트 추가/수정
+- `chore:` - 빌드/도구 변경 (버전 변경 없음)
+
+#### 수동 버전 지정
+
+특정 버전으로 설정하려면 Release PR의 제목을 수정하면 됩니다.
 
 ## 트러블슈팅
 
