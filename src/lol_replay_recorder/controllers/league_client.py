@@ -2,8 +2,7 @@ import os
 import platform
 from typing import Any, Dict, Optional, List
 
-from ..services.config.editors.yaml import YamlEditor
-from ..services.config.editors.ini import IniEditor
+from ..services.config.game_settings import GameSettingsManager
 from ..services.process.platform import PlatformResolver
 from ..services.process.manager import ProcessManager
 from ..utils.utils import sleep_in_seconds
@@ -30,6 +29,7 @@ class LeagueClient:
         """Initialize LeagueClient orchestrator."""
         self.platform_resolver = platform_resolver or PlatformResolver()
         self._process_manager = process_manager or ProcessManager(self.platform_resolver)
+        self._game_settings_manager: Optional[GameSettingsManager] = None
         self.riot_game_client: Optional[RiotGameClient] = None
         self.league_client_ux: Optional[LeagueClientUx] = None
         self.league_replay_client: Optional[LeagueReplayClient] = None
@@ -54,6 +54,12 @@ class LeagueClient:
         if self.league_replay_client is None:
             self.league_replay_client = LeagueReplayClient()
         return self.league_replay_client
+
+    def _get_game_settings_manager(self) -> GameSettingsManager:
+        """Get or create GameSettingsManager instance."""
+        if self._game_settings_manager is None:
+            self._game_settings_manager = GameSettingsManager(self.platform_resolver)
+        return self._game_settings_manager
 
     def _get_window_handler(self) -> WindowHandler:
         """Get or create WindowHandler instance."""
@@ -209,24 +215,35 @@ class LeagueClient:
         Raises:
             CustomError: If locale is invalid
         """
-        try:
-            yaml_path = self.get_product_settings_path()
-            yaml_editor = YamlEditor(yaml_path)
+        from ..models.locale import Locale
+        game_settings = self._get_game_settings_manager()
+        await game_settings.set_locale(Locale(locale))
 
-            available_locales = yaml_editor.data.get("locale_data", {}).get("available_locales", [])
-            if locale not in available_locales:
-                raise CustomError(
-                    f"Invalid locale: {locale}, available locales: {available_locales}"
-                )
+    async def update_game_config(
+        self,
+        updates: dict[str, Any]
+    ) -> None:
+        """
+        Update game configuration with provided updates.
 
-            yaml_editor.update("locale_data.default_locale", locale)
-            yaml_editor.update("settings.locale", locale)
-            yaml_editor.save_changes()
+        Args:
+            updates: Dictionary of configuration updates
+        """
+        game_settings = self._get_game_settings_manager()
+        await game_settings.update_game_config(updates)
 
-        except Exception as e:
-            if isinstance(e, CustomError):
-                raise
-            print(f"Error setting locale: {e}")
+    async def set_window_mode(
+        self,
+        enable: bool
+    ) -> None:
+        """
+        Enable or disable window mode.
+
+        Args:
+            enable: Whether to enable window mode
+        """
+        game_settings = self._get_game_settings_manager()
+        await game_settings.set_window_mode(enable)
 
     # WINDOW MANAGEMENT //
 

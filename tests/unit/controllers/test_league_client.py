@@ -325,7 +325,7 @@ class TestLeagueClient:
         mock_window_handler = AsyncMock()
         league_client._window_handler = mock_window_handler
 
-        with patch('platform.system', return_value='Windows'):
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
             await league_client.focus_client_window()
             mock_window_handler.focus_client_window.assert_called_once_with("League of Legends (TM)")
 
