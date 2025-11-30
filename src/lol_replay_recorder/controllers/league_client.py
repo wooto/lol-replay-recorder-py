@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, List
 from ..apis.yaml_editor import YamlEditor
 from ..apis.ini_editor import IniEditor
 from ..utils.utils import sleep_in_seconds
-from ..models.custom_error import CustomError
+from ..domain.errors import CustomError, ProcessError
 from .riot_game_client import RiotGameClient
 from .league_client_ux import LeagueClientUx
 from .league_replay_client import LeagueReplayClient
@@ -89,7 +89,7 @@ class LeagueClient:
                 # Verify client is in idle state
                 state = await league_ux.get_state({"retry": 1})
                 if state.get("action") != "Idle":
-                    raise Exception(f"Client is not ready: {state.get('action')}")
+                    raise ProcessError(f"Client is not ready: {state.get('action')}")
 
                 break
 

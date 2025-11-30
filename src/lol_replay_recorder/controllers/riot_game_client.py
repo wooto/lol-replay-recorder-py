@@ -8,6 +8,7 @@ from ..models.locale import Locale
 from ..models.riot_request import make_request
 from ..models.riot_types import Region
 from ..utils.utils import refine_region, sleep_in_seconds
+from ..domain.errors import ConfigError
 from .window_handler import Key, WindowHandler
 
 
@@ -211,7 +212,7 @@ class RiotGameClient:
 
         while not os.path.exists(file_path):
             if asyncio.get_event_loop().time() - start_time > timeout_seconds:
-                raise Exception('File not found')
+                raise ConfigError(f'File not found: {file_path}')
             await sleep_in_seconds(1)
 
     async def _invoke_riot_request(

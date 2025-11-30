@@ -1,6 +1,6 @@
 import httpx
 from typing import Any
-from .custom_error import CustomError
+from ..domain.errors import CustomError, HTTPError
 
 
 async def make_request(
@@ -15,7 +15,7 @@ async def make_request(
     The replay API uses self-signed certificates, so we disable SSL verification.
     """
     if retries < 0:
-        raise Exception("Client Request Error: Max retries exceeded")
+        raise HTTPError(url, 0, "Max retries exceeded")
 
     new_headers = {**(headers or {}), "Content-Type": "application/json"}
 
@@ -30,7 +30,7 @@ async def make_request(
 
             if not response.is_success:
                 if response.status_code == 404:
-                    raise CustomError("Failed to find the requested resource.")
+                    raise HTTPError(url, response.status_code, "Failed to find the requested resource.")
                 return await make_request(method, url, headers, body, retries - 1)
 
             try:
@@ -42,5 +42,5 @@ async def make_request(
         raise
     except Exception as e:
         if retries <= 0:
-            raise Exception(f"Client Request Error: {url}, {str(e)}")
+            raise HTTPError(url, 0, str(e))
         return await make_request(method, url, headers, body, retries - 1)

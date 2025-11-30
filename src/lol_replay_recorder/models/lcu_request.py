@@ -3,6 +3,7 @@ import base64
 import asyncio
 from pathlib import Path
 from typing import Any
+from ..domain.errors import CustomError, HTTPError, LockfileError
 
 
 async def read_lockfile(lockfile_path: str) -> dict[str, str]:
@@ -20,7 +21,7 @@ async def read_lockfile(lockfile_path: str) -> dict[str, str]:
         elapsed += 1
 
     if not path.exists():
-        raise FileNotFoundError(f"Lockfile not found: {lockfile_path}")
+        raise LockfileError(f"Lockfile not found: {lockfile_path}")
 
     content = path.read_text(encoding="utf-8")
     parts = content.split(":")
@@ -68,7 +69,9 @@ async def make_lcu_request(
 
             if not response.is_success:
                 if retries <= 0:
-                    raise Exception(
+                    raise HTTPError(
+                        url,
+                        response.status_code,
                         f"LCU Request Error: {response.status_code} {response.reason_phrase}"
                     )
                 return await make_lcu_request(
@@ -82,7 +85,7 @@ async def make_lcu_request(
 
     except Exception as e:
         if retries <= 0:
-            raise Exception(f"LCU Request Error: {url}, {str(e)}")
+            raise HTTPError(url, 0, f"LCU Request Error: {str(e)}")
         return await make_lcu_request(
             lockfile_path, endpoint, method, body, retries - 1
         )
