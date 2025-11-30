@@ -246,7 +246,10 @@ async def test_invoke_riot_request(riot_client):
 
     with patch.object(riot_client, '_wait_for_lockfile_exists') as mock_wait:
         with patch('builtins.open', mock_open(read_data=mock_lockfile_content)):
-            with patch('lol_replay_recorder.models.riot_request.make_request', return_value=mock_response) as mock_request:
+            with patch('lol_replay_recorder.controllers.riot_game_client.RiotAPIClient') as mock_client_class:
+                mock_client = AsyncMock()
+                mock_client.request_with_retry.return_value = mock_response
+                mock_client_class.return_value = mock_client
 
                 result = await riot_client._invoke_riot_request(
                     mock_lockfile_path,
@@ -257,16 +260,16 @@ async def test_invoke_riot_request(riot_client):
                 )
 
                 assert result == mock_response
-                mock_request.assert_called_once()
+                mock_client.request_with_retry.assert_called_once()
 
                 # Verify request parameters
-                call_args = mock_request.call_args[0]
-                assert call_args[0] == 'POST'  # method
-                assert call_args[1] == 'https://127.0.0.1:5678/test/path'  # url
-                assert 'Authorization' in call_args[2]  # headers
-                assert call_args[2]['Authorization'].startswith('Basic ')
-                assert call_args[3] == {'test': 'data'}  # body
-                assert call_args[4] == 1
+                call_args = mock_client.request_with_retry.call_args[1]  # kwargs
+                assert call_args['method'] == 'POST'
+                assert call_args['url'] == 'https://127.0.0.1:5678/test/path'
+                assert 'Authorization' in call_args['headers']
+                assert call_args['headers']['Authorization'].startswith('Basic ')
+                assert call_args['body'] == {'test': 'data'}
+                assert call_args['retries'] == 2
 
 
 @pytest.mark.unit
