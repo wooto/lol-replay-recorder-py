@@ -3,9 +3,9 @@ import os
 import platform
 from typing import Any, Dict, Optional
 
-from ..models.lcu_request import make_lcu_request
 from ..models.summoner import Summoner
-from ..models.custom_error import CustomError
+from ..domain.errors import CustomError
+from ..clients.http.lcu import LCUClient
 from ..utils.utils import sleep_in_seconds, refine_region
 from .window_handler import WindowHandler
 
@@ -32,16 +32,35 @@ class LeagueClientUx:
         self.patch: str = ""
         self.lockfile_path: str = lockfile_path or ""
         self.window_handler: WindowHandler = WindowHandler()
+        self.lcu_client: Optional[LCUClient] = None
 
     async def __aenter__(self) -> "LeagueClientUx":
         """Async context manager entry."""
         if not self.lockfile_path:
             self.lockfile_path = await self.get_lockfile_path()
+        self.lcu_client = LCUClient(self.lockfile_path)
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         pass
+
+    def _ensure_lcu_client(self) -> LCUClient:
+        """Ensure LCU client is initialized."""
+        if self.lcu_client is None:
+            raise CustomError("LCU client not initialized. Use async context manager or set lockfile_path first.")
+        return self.lcu_client
+
+    async def _make_lcu_request(
+        self,
+        endpoint: str,
+        method: str = "GET",
+        body: Optional[Dict[str, Any]] = None,
+        retries: int = 3,
+    ) -> Any:
+        """Make LCU request using the LCU client."""
+        client = self._ensure_lcu_client()
+        return await client.request(endpoint, method, body, retries)
 
     # CLIENT STARTUP AND MANAGEMENT //
 
@@ -139,25 +158,17 @@ class LeagueClientUx:
 
     async def get_highlights_folder_path(self) -> str:
         """Get the highlights folder path from the client."""
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-highlights/v1/highlights-folder-path",
-            "GET",
-            None,
-            3
+        return await self._make_lcu_request("/lol-highlights/v1/highlights-folder-path", "GET", None, 3
         )
 
     async def get_game_settings(self) -> Dict[str, Any]:
         """Get current game settings."""
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-game-settings/v1/game-settings"
+        return await self._make_lcu_request("/lol-game-settings/v1/game-settings"
         )
 
     async def get_input_settings(self) -> Dict[str, Any]:
         """Get current input settings."""
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             "/lol-game-settings/v1/input-settings"
         )
 
@@ -171,10 +182,7 @@ class LeagueClientUx:
         Returns:
             Dictionary containing region and locale data
         """
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/riotclient/region-locale",
-            retries=retries
+        return await self._make_lcu_request("/riotclient/region-locale", retries=retries
         )
 
     async def patch_game_settings(self, settings_resource: Dict[str, Any]) -> Dict[str, Any]:
@@ -187,19 +195,13 @@ class LeagueClientUx:
         Returns:
             Updated settings response
         """
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-game-settings/v1/game-settings",
-            method="PATCH",
-            body=settings_resource
+        return await self._make_lcu_request("/lol-game-settings/v1/game-settings", method="PATCH", body=settings_resource
         )
 
     async def save_game_settings(self) -> bool:
         """Save current game settings."""
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-game-settings/v1/save",
-            method="POST"
+        return await self._make_lcu_request(
+            "/lol-game-settings/v1/save", method="POST"
         )
 
     async def disable_window_mode(self) -> Dict[str, Any]:
@@ -260,9 +262,7 @@ class LeagueClientUx:
 
     async def get_replay_config(self) -> Dict[str, Any]:
         """Get replay configuration."""
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-replays/v1/configuration"
+        return await self._make_lcu_request("/lol-replays/v1/configuration"
         )
 
     async def get_replay_metadata(self, match_id: str) -> Dict[str, Any]:
@@ -275,15 +275,13 @@ class LeagueClientUx:
         Returns:
             Replay metadata including download state
         """
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             f"/lol-replays/v1/metadata/{match_id}"
         )
 
     async def get_rofls_path(self) -> str:
         """Get the ROFL (replay files) path."""
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             "/lol-replays/v1/rofls/path"
         )
 
@@ -297,8 +295,7 @@ class LeagueClientUx:
         Raises:
             CustomError: If download fails
         """
-        await make_lcu_request(
-            self.lockfile_path,
+        await self._make_lcu_request(
             f"/lol-replays/v1/rofls/{match_id}/download",
             method="POST",
             retries=10
@@ -344,8 +341,7 @@ class LeagueClientUx:
         """
         await self.download_replay(match_id)
 
-        await make_lcu_request(
-            self.lockfile_path,
+        await self._make_lcu_request(
             f"/lol-replays/v1/rofls/{match_id}/watch",
             method="POST",
             retries=10
@@ -363,8 +359,7 @@ class LeagueClientUx:
         Returns:
             End of match data
         """
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             f"/lol-match-history/v1/games/{match_id}"
         )
 
@@ -378,8 +373,7 @@ class LeagueClientUx:
         Returns:
             Summoner data
         """
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             f"/lol-summoner/v1/summoners?name={riot_id}"
         )
 
@@ -395,8 +389,7 @@ class LeagueClientUx:
         Returns:
             List of match history games
         """
-        match_data = await make_lcu_request(
-            self.lockfile_path,
+        match_data = await self._make_lcu_request(
             f"/lol-match-history/v1/products/lol/{puuid}/matches?begIndex={beg_index}&endIndex={end_index}"
         )
         return match_data.get("games", {}).get("games", [])
@@ -411,8 +404,7 @@ class LeagueClientUx:
         Returns:
             List of timeline frames
         """
-        match_data = await make_lcu_request(
-            self.lockfile_path,
+        match_data = await self._make_lcu_request(
             f"/lol-match-history/v1/game-timelines/{match_id}"
         )
         return match_data.get("frames", [])
@@ -429,9 +421,7 @@ class LeagueClientUx:
         if self.patch:
             return self.patch
 
-        raw_patch_data = await make_lcu_request(
-            self.lockfile_path,
-            "/lol-patch/v1/game-version"
+        raw_patch_data = await self._make_lcu_request("/lol-patch/v1/game-version"
         )
 
         self.patch = raw_patch_data
@@ -452,18 +442,12 @@ class LeagueClientUx:
 
         retry = options.get("retry", 0)
 
-        return await make_lcu_request(
-            self.lockfile_path,
-            "/lol-patch/v1/products/league_of_legends/state",
-            "GET",
-            None,
-            retry
+        return await self._make_lcu_request("/lol-patch/v1/products/league_of_legends/state", "GET", None, retry
         )
 
     async def get_queues(self) -> list[Any]:
         """Get available game queues."""
-        return await make_lcu_request(
-            self.lockfile_path,
+        return await self._make_lcu_request(
             "lol-game-queues/v1/queues"
         )
 
@@ -474,10 +458,8 @@ class LeagueClientUx:
         Returns:
             Summoner object with current user data
         """
-        current_summoner = await make_lcu_request(
-            self.lockfile_path,
-            "/lol-summoner/v1/current-summoner"
-        )
+        current_summoner = await self._make_lcu_request(
+            "/lol-summoner/v1/current-summoner")
 
         return Summoner(
             summoner_name=current_summoner.get("displayName", ""),

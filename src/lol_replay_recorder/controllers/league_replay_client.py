@@ -1,8 +1,8 @@
 import os
 from typing import Any
-from ..models.riot_request import make_request
 from ..models.replay_type import RecordingProperties, RenderProperties, GameData
-from ..models.custom_error import CustomError
+from ..domain.errors import CustomError
+from ..clients.http.riot import RiotAPIClient
 from ..utils.utils import sleep_in_seconds
 from .window_handler import WindowHandler, Key
 
@@ -14,7 +14,7 @@ class LeagueReplayClient:
     """Client for interacting with League of Legends Replay API."""
 
     def __init__(self) -> None:
-        self.url = "https://127.0.0.1:2999"
+        self.api_client = RiotAPIClient()
         self.pid: int | None = None
 
     async def init(self) -> None:
@@ -34,7 +34,7 @@ class LeagueReplayClient:
         if self.pid:
             return self.pid
 
-        replay_data = await make_request("GET", f"{self.url}/replay/game")
+        replay_data = await self.api_client.request("/replay/game")
         if replay_data and "processID" in replay_data:
             self.pid = replay_data["processID"]
 
@@ -52,27 +52,27 @@ class LeagueReplayClient:
 
     async def get_playback_properties(self) -> dict[str, Any]:
         """Get current playback properties."""
-        return await make_request("GET", f"{self.url}/replay/playback")
+        return await self.api_client.request("/replay/playback")
 
     async def post_playback_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update playback properties."""
-        return await make_request("POST", f"{self.url}/replay/playback", body=options)
+        return await self.api_client.request("/replay/playback", method="POST", body=options)
 
     async def get_recording_properties(self) -> RecordingProperties:
         """Get current recording properties."""
-        return await make_request("GET", f"{self.url}/replay/recording")
+        return await self.api_client.request("/replay/recording")
 
     async def post_recording_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update recording properties."""
-        return await make_request("POST", f"{self.url}/replay/recording", body=options)
+        return await self.api_client.request("/replay/recording", method="POST", body=options)
 
     async def get_render_properties(self) -> RenderProperties:
         """Get current render properties."""
-        return await make_request("GET", f"{self.url}/replay/render")
+        return await self.api_client.request("/replay/render")
 
     async def post_render_properties(self, options: dict[str, Any]) -> dict[str, Any]:
         """Update render properties."""
-        return await make_request("POST", f"{self.url}/replay/render", body=options)
+        return await self.api_client.request("/replay/render", method="POST", body=options)
 
     async def load(self, timeout: int, num_retries: int) -> None:
         """Load replay and wait for it to be ready."""
@@ -126,7 +126,7 @@ class LeagueReplayClient:
 
     async def get_all_game_data(self) -> GameData:
         """Get all game data."""
-        return await make_request("GET", f"{self.url}/liveclientdata/allgamedata")
+        return await self.api_client.request("/liveclientdata/allgamedata")
 
     async def get_in_game_position_by_summoner_name(self, summoner_name: str) -> int:
         """Get player position index by summoner name (0-9)."""

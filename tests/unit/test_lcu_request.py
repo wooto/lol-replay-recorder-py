@@ -1,10 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch, mock_open, MagicMock
 from pathlib import Path
-from lol_replay_recorder.models.lcu_request import (
-    make_lcu_request,
-    read_lockfile,
-)
+from lol_replay_recorder.clients.http.lcu import LCUClient
 
 
 @pytest.mark.asyncio

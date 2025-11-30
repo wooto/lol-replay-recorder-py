@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from lol_replay_recorder.models.riot_request import make_request
+from lol_replay_recorder.clients.http.riot import RiotAPIClient
 from lol_replay_recorder.domain.errors import CustomError, HTTPError
 
 

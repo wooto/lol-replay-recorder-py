@@ -54,8 +54,7 @@ from .replay_type import (
     GameInput,
     LiveGameInput,
 )
-from .riot_request import make_request
-from .lcu_request import make_lcu_request, read_lockfile
+# HTTP request functions moved to clients/http package
 
 __all__ = [
     "CustomError",
@@ -114,8 +113,4 @@ __all__ = [
     "RenderInput",
     "GameInput",
     "LiveGameInput",
-    # Functions
-    "make_request",
-    "make_lcu_request",
-    "read_lockfile",
 ]

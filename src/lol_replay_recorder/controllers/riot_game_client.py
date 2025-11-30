@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, NamedTuple, Optional
 
 from ..models.locale import Locale
-from ..models.riot_request import make_request
 from ..models.riot_types import Region
+from ..clients.http.riot import RiotAPIClient
 from ..utils.utils import refine_region, sleep_in_seconds
 from ..domain.errors import ConfigError
 from .window_handler import Key, WindowHandler
@@ -238,12 +238,14 @@ class RiotGameClient:
             'Content-Type': 'application/json',
         }
 
-        response = await make_request(
-            method,
-            url,
-            headers,
-            body,
-            retry,
+        # Use RiotAPIClient for HTTP requests
+        client = RiotAPIClient(host='127.0.0.1', port=int(port))
+        response = await client.request_with_retry(
+            method=method,
+            url=url,
+            headers=headers,
+            body=body,
+            retries=retry,
         )
 
         return response
