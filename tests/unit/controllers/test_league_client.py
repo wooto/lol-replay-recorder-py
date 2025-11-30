@@ -12,8 +12,8 @@ from lol_replay_recorder.controllers.league_replay_client import LeagueReplayCli
 from lol_replay_recorder.models.locale import Locale
 from lol_replay_recorder.models.riot_types import Region, PlatformId
 from lol_replay_recorder.domain.errors import CustomError
-from lol_replay_recorder.apis.yaml_editor import YamlEditor
-from lol_replay_recorder.apis.ini_editor import IniEditor
+from lol_replay_recorder.services.config.editors.yaml import YamlEditor
+from lol_replay_recorder.services.config.editors.ini import IniEditor
 
 
 class TestLeagueClient:

@@ -4,8 +4,8 @@ import subprocess
 import signal
 from typing import Any, Dict, Optional, List
 
-from ..apis.yaml_editor import YamlEditor
-from ..apis.ini_editor import IniEditor
+from ..services.config.editors.yaml import YamlEditor
+from ..services.config.editors.ini import IniEditor
 from ..utils.utils import sleep_in_seconds
 from ..domain.errors import CustomError, ProcessError
 from .riot_game_client import RiotGameClient
