@@ -17,6 +17,12 @@ SHORT_WAIT = 5.0
 MINUTE_IN_SECONDS = 60
 HOUR_IN_SECONDS = 3600
 
+# Camera and interaction constants
+CAMERA_FOCUS_RETRY_COUNT = 10
+CAMERA_FOCUS_KEY_PRESS_COUNT = 50
+CAMERA_FOCUS_KEY_PRESS_INTERVAL = 0.2
+CAMERA_FOCUS_VERIFICATION_DELAY = 10.0
+
 # Retry count constants
 DEFAULT_RETRY_COUNT = 3
 HTTP_RETRY_COUNT = 5
@@ -39,6 +45,11 @@ LOCALHOST = "localhost"
 PLATFORM_WINDOWS = "Windows"
 PLATFORM_DARWIN = "Darwin"  # macOS
 PLATFORM_LINUX = "Linux"
+
+# Default installation paths
+DEFAULT_WINDOWS_INSTALL_PATH = "C:\\Riot Games\\League of Legends"
+MAC_LEAGUE_CLIENT_PATH = "/Applications/League of Legends.app"
+MAC_USER_LEAGUE_CLIENT_PATH = "~/Library/Application Support/Riot Games/League of Legends"
 
 # Process names (Windows)
 RIOT_CLIENT_UX_PROCESS = "RiotClientUx.exe"

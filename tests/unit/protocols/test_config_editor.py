@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 from typing import Any
 
-from lol_replay_recorder.protocols import ConfigEditor
+from lol_replay_recorder.protocols.config_editor import ConfigEditor
 from lol_replay_recorder.services.config.editors.ini import IniEditor
 from lol_replay_recorder.services.config.editors.yaml import YamlEditor
 
@@ -84,19 +84,21 @@ class TestConfigEditorProtocol:
         ini_editor = IniEditor(temp_ini_file)
         yaml_editor = YamlEditor(temp_yaml_file)
 
-        # Test load() returns dict[str, Any]
-        ini_data = ini_editor.load()
-        yaml_data = yaml_editor.load()
-        assert isinstance(ini_data, dict)
-        assert isinstance(yaml_data, dict)
+        # Test load() returns None and loads data
+        assert ini_editor.load() is None
+        assert yaml_editor.load() is None
+
+        # Data should be accessible via data property
+        assert isinstance(ini_editor.data, dict)
+        assert isinstance(yaml_editor.data, dict)
 
         # Test save() returns None
         assert ini_editor.save() is None
         assert yaml_editor.save() is None
 
-        # Test update() accepts path and value
-        ini_editor.update("General.NewSetting", "test_value")
-        yaml_editor.update("new_section.new_key", "test_value")
+        # Test update() accepts dict of updates
+        ini_editor.update({"General.NewSetting": "test_value"})
+        yaml_editor.update({"new_section.new_key": "test_value"})
 
     def test_editors_as_protocol_parameters(self):
         """Test that editors can be used as ConfigEditor protocol parameters."""

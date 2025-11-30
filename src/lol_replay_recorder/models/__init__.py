@@ -1,59 +1,73 @@
-from .custom_error import CustomError
-from .locale import Locale
-from .riot_types import PlatformId, Region, Cluster
-from .summoner import Summoner as SummonerClass
-from .metadata_types import (
-    PlayerInfo as MetadataPlayerInfo,
-    Summoner,
-    TeamInfo,
-    SelectorData,
-    SummonerTeamInfo,
-)
-from .replay_type import (
-    RecordingProperties,
-    RenderProperties,
-    GameData,
-    ReplayMetadata,
-    ReplayData,
-    ProcessingOptions,
-    KeyValuePair,
-    RenderSetting,
-    GameInfo,
-    PlayerInfo as ReplayPlayerInfo,
-    TeamInfo as ReplayTeamInfo,
-    EventData,
-    # Live Game Data Types
+# Legacy imports from new domain structure with deprecation warnings
+import warnings
+
+# Import from new domain structure
+from ..domain.entities import Summoner as DomainSummoner
+from ..domain.types import (
     ActivePlayer,
+    ColorRGBA,
+    Event,
+    EventData,
+    Events,
+    FrameRate,
+    GameData,
+    GameDetails,
+    GameInfo,
+    GameInput,
+    GameVersion,
     Item,
     Keystone,
-    RuneTree,
+    KeyValuePair,
+    LiveGameData,
+    LiveGameInput,
+    Locale,
+    LogLevel,
+    MetadataPlayerInfo,
+    MetadataSummoner,
+    PlatformId,
+    Player,
+    PlayerInfo,
+    ProcessingOptions,
+    RecordingInput,
+    RecordingProperties,
+    RenderProperties,
+    ReplayData,
+    ReplayID,
+    ReplayMetadata,
+    ReplayTeamInfo,
     Runes,
+    RuneTree,
     Scores,
+    SelectorData,
     SummonerSpell,
     SummonerSpells,
-    Player,
-    Event,
-    Events,
-    GameDetails,
-    LiveGameData,
-    # Utility types
-    Vector3,
-    ColorRGBA,
-    # Type aliases
-    ReplayID,
-    PlatformID,
-    GameVersion,
+    SummonerTeamInfo,
+    TeamDetails,
+    TeamInfo,
     Timestamp,
-    FrameRate,
-    Resolution,
-    FilePath,
-    LogLevel,
-    # Union types
-    RecordingInput,
-    RenderInput,
-    GameInput,
-    LiveGameInput,
+    Vector3,
 )
+from ..domain.types.riot_types import Cluster, Region
+from ..domain.errors import CustomError
+
+# Backward compatibility aliases with deprecation warnings
+class SummonerClass(DomainSummoner):
+    """Legacy Summoner class - DEPRECATED
+
+    Use lol_replay_recorder.domain.entities.Summoner instead.
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "SummonerClass is deprecated. Use lol_replay_recorder.domain.entities.Summoner instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        super().__init__(*args, **kwargs)
+
+# Create aliases for backward compatibility
+Summoner = MetadataSummoner
+ReplayPlayerInfo = PlayerInfo
 # HTTP request functions moved to clients/http package
 # Backward compatibility wrappers with deprecation warnings
 
@@ -127,12 +141,16 @@ async def read_lockfile(lockfile_path: str):
     return await client._read_lockfile(lockfile_path)
 
 __all__ = [
+    # Errors
     "CustomError",
+    # Types
     "Locale",
     "PlatformId",
     "Region",
     "Cluster",
+    # Entities
     "SummonerClass",
+    # Metadata Types
     "Summoner",
     "MetadataPlayerInfo",
     "ReplayPlayerInfo",
@@ -140,6 +158,8 @@ __all__ = [
     "ReplayTeamInfo",
     "SelectorData",
     "SummonerTeamInfo",
+    "TeamDetails",
+    # Replay Types
     "RecordingProperties",
     "RenderProperties",
     "GameData",
@@ -147,10 +167,8 @@ __all__ = [
     "ReplayData",
     "ProcessingOptions",
     "KeyValuePair",
-    "RenderSetting",
     "GameInfo",
     "PlayerInfo",
-    "TeamInfo",
     "EventData",
     # Live Game Data Types
     "ActivePlayer",
@@ -171,16 +189,12 @@ __all__ = [
     "ColorRGBA",
     # Type aliases
     "ReplayID",
-    "PlatformID",
     "GameVersion",
     "Timestamp",
     "FrameRate",
-    "Resolution",
-    "FilePath",
     "LogLevel",
     # Union types
     "RecordingInput",
-    "RenderInput",
     "GameInput",
     "LiveGameInput",
     # Backward compatibility functions (deprecated)

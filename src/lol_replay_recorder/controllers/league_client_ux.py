@@ -3,7 +3,7 @@ import os
 import platform
 from typing import Any, Dict, Optional
 
-from ..models.summoner import Summoner
+from ..domain.entities import Summoner
 from ..domain.errors import CustomError
 from ..clients.http.lcu import LCUClient
 from ..services.process.platform import PlatformResolver

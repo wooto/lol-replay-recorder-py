@@ -4,8 +4,8 @@ from base64 import b64encode
 from pathlib import Path
 from typing import Any, Dict, NamedTuple, Optional
 
-from ..models.locale import Locale
-from ..models.riot_types import Region
+from ..domain.types import Locale
+from ..domain.types import Region
 from ..clients.http.riot import RiotAPIClient
 from ..services.process.platform import PlatformResolver
 from ..utils.utils import refine_region, sleep_in_seconds

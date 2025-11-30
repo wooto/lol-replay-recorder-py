@@ -1,7 +1,7 @@
 import os
 from typing import Any
 
-from ..models.replay_type import RecordingProperties, RenderProperties, GameData
+from ..domain.types import RecordingProperties, RenderProperties, GameData
 from ..domain.errors import CustomError
 from ..clients.http.riot import RiotAPIClient
 from ..utils.utils import sleep_in_seconds

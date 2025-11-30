@@ -216,7 +216,7 @@ class LeagueClient:
         Raises:
             CustomError: If locale is invalid
         """
-        from ..models.locale import Locale
+        from ..domain.types import Locale
         game_settings = self._get_game_settings_manager()
         await game_settings.set_locale(Locale(locale))
 
