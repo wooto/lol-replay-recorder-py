@@ -37,7 +37,7 @@ class TestLeagueClientUx:
     @pytest.fixture
     def mock_lcu_request(self):
         """Mock LCU request function."""
-        with patch('lol_replay_recorder.controllers.league_client_ux.make_lcu_request') as mock:
+        with patch('lol_replay_recorder.models.make_lcu_request') as mock:
             yield mock
 
     @pytest.fixture
@@ -63,12 +63,12 @@ class TestLeagueClientUx:
     async def test_get_lockfile_path_windows(self):
         """Test getting lockfile path on Windows."""
         client = LeagueClientUx()
-        with patch('platform.system', return_value='Windows'):
-            with patch('os.path.join', return_value='C:\\Users\\Test\\AppData\\Local\\Riot Games\\League of Legends\\lockfile'):
-                with patch.dict(os.environ, {'LOCALAPPDATA': 'C:\\Users\\Test\\AppData\\Local'}):
-                    lockfile_path = await client.get_lockfile_path()
-                    expected_path = 'C:\\Users\\Test\\AppData\\Local\\Riot Games\\League of Legends\\lockfile'
-                    assert lockfile_path == expected_path
+        with patch.object(client.platform_resolver, 'is_windows', return_value=True):
+            with patch.object(client.platform_resolver, 'get_league_client_lockfile_path',
+                            return_value='C:\\Users\\Test\\AppData\\Local\\Riot Games\\League of Legends\\lockfile'):
+                lockfile_path = await client.get_lockfile_path()
+                expected_path = 'C:\\Users\\Test\\AppData\\Local\\Riot Games\\League of Legends\\lockfile'
+                assert lockfile_path == expected_path
 
     @pytest.mark.asyncio
     @pytest.mark.unit

@@ -1,11 +1,11 @@
 import asyncio
 import os
-import platform
 from typing import Any, Dict, Optional
 
 from ..models.summoner import Summoner
 from ..domain.errors import CustomError
 from ..clients.http.lcu import LCUClient
+from ..services.process.platform import PlatformResolver
 from ..utils.utils import sleep_in_seconds, refine_region
 from .window_handler import WindowHandler
 
@@ -22,13 +22,19 @@ class LeagueClientUx:
     - Window management and focus
     """
 
-    def __init__(self, lockfile_path: Optional[str] = None):
+    def __init__(
+        self,
+        lockfile_path: Optional[str] = None,
+        platform_resolver: Optional[PlatformResolver] = None
+    ):
         """
         Initialize LeagueClientUx controller.
 
         Args:
             lockfile_path: Optional custom lockfile path for testing
+            platform_resolver: Optional platform resolver for path management
         """
+        self.platform_resolver = platform_resolver or PlatformResolver()
         self.patch: str = ""
         self.lockfile_path: str = lockfile_path or ""
         self.window_handler: WindowHandler = WindowHandler()
@@ -48,7 +54,9 @@ class LeagueClientUx:
     def _ensure_lcu_client(self) -> LCUClient:
         """Ensure LCU client is initialized."""
         if self.lcu_client is None:
-            raise CustomError("LCU client not initialized. Use async context manager or set lockfile_path first.")
+            if not self.lockfile_path:
+                raise CustomError("LCU client not initialized. Use async context manager or set lockfile_path first.")
+            self.lcu_client = LCUClient(self.lockfile_path)
         return self.lcu_client
 
     async def _make_lcu_request(
@@ -476,16 +484,7 @@ class LeagueClientUx:
         Returns:
             Path to lockfile based on operating system
         """
-        system = platform.system()
-
-        if system == "Windows":
-            local_app_data = os.environ.get("LOCALAPPDATA", "")
-            return os.path.join(local_app_data, "Riot Games", "League of Legends", "lockfile")
-        elif system == "Darwin":  # macOS
-            return os.path.expanduser("~/Library/Application Support/Riot Games/League of Legends/lockfile")
-        else:
-            # Default to Linux path
-            return os.path.expanduser("~/.config/Riot Games/League of Legends/lockfile")
+        return self.platform_resolver.get_league_client_lockfile_path()
 
     async def remove_lockfile(self) -> None:
         """Remove the League Client lockfile. Ignores errors if file doesn't exist."""

@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, List
 
 from ..services.config.editors.yaml import YamlEditor
 from ..services.config.editors.ini import IniEditor
+from ..services.process.platform import PlatformResolver
 from ..utils.utils import sleep_in_seconds
 from ..domain.errors import CustomError, ProcessError
 from .riot_game_client import RiotGameClient
@@ -26,8 +27,9 @@ class LeagueClient:
     - Complex workflows spanning multiple controllers
     """
 
-    def __init__(self) -> None:
+    def __init__(self, platform_resolver: Optional[PlatformResolver] = None) -> None:
         """Initialize LeagueClient orchestrator."""
+        self.platform_resolver = platform_resolver or PlatformResolver()
         self.riot_game_client: Optional[RiotGameClient] = None
         self.league_client_ux: Optional[LeagueClientUx] = None
         self.league_replay_client: Optional[LeagueReplayClient] = None
@@ -113,9 +115,7 @@ class LeagueClient:
 
     async def stop_riot_processes(self) -> None:
         """Stop all Riot-related processes and clean up lockfiles."""
-        system = platform.system()
-
-        if system == "Windows":
+        if self.platform_resolver.is_windows():
             await self._stop_windows_processes()
         else:
             await self._stop_unix_processes()
@@ -220,52 +220,14 @@ class LeagueClient:
 
     # PATH AND INSTALLATION MANAGEMENT //
 
-    async def find_windows_installed(self) -> List[str]:
-        """
-        Find League of Legends installation paths on Windows.
-
-        Returns:
-            List of installation paths (empty if not found)
-        """
-        if platform.system() != "Windows":
-            return []
-
-        potential_paths = [
-            "C:\\Riot Games\\League of Legends",
-            "D:\\Riot Games\\League of Legends",
-            os.path.expanduser("~\\Riot Games\\League of Legends")
-        ]
-
-        found_paths = []
-        for path in potential_paths:
-            if os.path.exists(path):
-                found_paths.append(path)
-
-        return found_paths
-
-    async def get_installed_paths(self) -> List[str]:
+    def get_installed_paths(self) -> List[str]:
         """
         Get all League of Legends installation paths for current platform.
 
         Returns:
             List of installation paths
         """
-        system = platform.system()
-
-        if system == "Windows":
-            return await self.find_windows_installed()
-        elif system == "Darwin":  # macOS
-            mac_paths = [
-                "/Applications/League of Legends.app/Contents/LoL",
-                os.path.expanduser("~/Applications/League of Legends.app/Contents/LoL")
-            ]
-            return [path for path in mac_paths if os.path.exists(path)]
-        else:  # Linux
-            linux_paths = [
-                os.path.expanduser("~/.config/Riot Games/League of Legends"),
-                "/opt/riot-games/league-of-legends"
-            ]
-            return [path for path in linux_paths if os.path.exists(path)]
+        return self.platform_resolver.get_installed_paths()
 
     def get_product_settings_path(self) -> str:
         """
@@ -274,17 +236,7 @@ class LeagueClient:
         Returns:
             Path to product_settings.yaml
         """
-        system = platform.system()
-
-        if system == "Windows":
-            return os.path.join(
-                "C:", "ProgramData", "Riot Games", "Metadata",
-                "league_of_legends.live", "league_of_legends.live.product_settings.yaml"
-            )
-        else:  # macOS/Linux
-            return os.path.expanduser(
-                "~/.config/Riot Games/Metadata/league_of_legends.live/league_of_legends.live.product_settings.yaml"
-            )
+        return self.platform_resolver.get_product_settings_path()
 
     async def get_config_file_paths(self) -> List[str]:
         """
@@ -313,17 +265,7 @@ class LeagueClient:
         Returns:
             Config file path or None if not found
         """
-        potential_config_paths = [
-            os.path.join(initial_path, "DATA", "CFG", "game.cfg"),
-            os.path.join(initial_path, "Config", "game.cfg"),
-            os.path.join(initial_path, "Game", "Config", "game.cfg")
-        ]
-
-        for config_path in potential_config_paths:
-            if os.path.exists(config_path):
-                return config_path
-
-        return None
+        return self.platform_resolver.get_config_file_path(initial_path)
 
     # GAME CONFIGURATION //
 
@@ -359,21 +301,14 @@ class LeagueClient:
         except Exception as e:
             print(f"Error writing config file: {e}")
 
-    async def get_game_input_ini_path(self) -> str:
+    def get_game_input_ini_path(self) -> str:
         """
         Get the input.ini file path for the current platform.
 
         Returns:
             Path to input.ini file
         """
-        system = platform.system()
-
-        if system == "Windows":
-            return os.path.join("C:", "Riot Games", "League of Legends", "Config", "input.ini")
-        elif system == "Darwin":  # macOS
-            return os.path.expanduser("~/Library/Application Support/Riot Games/League of Legends/Config/input.ini")
-        else:  # Linux
-            return os.path.expanduser("~/.config/Riot Games/League of Legends/Config/input.ini")
+        return self.platform_resolver.get_input_ini_path()
 
     async def set_default_input_ini(self) -> None:
         """Set default key bindings for player selection in input.ini."""
@@ -431,9 +366,8 @@ class LeagueClient:
     async def focus_client_window(self) -> None:
         """Focus the League of Legends game window."""
         handler = self._get_window_handler()
-        system = platform.system()
 
-        if system == "Windows":
+        if self.platform_resolver.is_windows():
             target_title = "League of Legends (TM)"
         else:
             target_title = "League of Legends"

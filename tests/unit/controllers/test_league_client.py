@@ -201,38 +201,19 @@ class TestLeagueClient:
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_find_windows_installed_success(self, league_client):
-        """Test finding Windows installation when League of Legends is installed."""
-        with patch('platform.system', return_value='Windows'):
-            with patch('os.path.exists', return_value=True):
-                paths = await league_client.find_windows_installed()
-                assert len(paths) == 3  # All three potential paths exist
-                assert all("League of Legends" in path for path in paths)
-
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_find_windows_installed_not_found(self, league_client):
-        """Test finding Windows installation when League of Legends is not installed."""
-        with patch('platform.system', return_value='Windows'):
-            with patch('os.path.exists', return_value=False):
-                paths = await league_client.find_windows_installed()
-                assert len(paths) == 0
-
-    @pytest.mark.asyncio
-    @pytest.mark.unit
     async def test_get_installed_paths(self, league_client):
         """Test getting installed paths."""
         with patch('platform.system', return_value='Windows'):
-            with patch.object(league_client, 'find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
-                paths = await league_client.get_installed_paths()
+            with patch.object(league_client.platform_resolver, '_find_windows_installed', return_value=["C:\\Riot Games\\League of Legends"]):
+                paths = league_client.get_installed_paths()
                 assert paths == ["C:\\Riot Games\\League of Legends"]
 
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_get_config_file_paths(self, league_client):
         """Test getting config file paths."""
-        with patch.object(league_client, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
-            with patch.object(league_client, 'get_config_file_path', return_value="C:\\Riot Games\\League of Legends\\Config\\game.cfg"):
+        with patch.object(league_client.platform_resolver, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
+            with patch.object(league_client.platform_resolver, 'get_config_file_path', return_value="C:\\Riot Games\\League of Legends\\Config\\game.cfg"):
                 paths = await league_client.get_config_file_paths()
                 assert paths == ["C:\\Riot Games\\League of Legends\\Config\\game.cfg"]
 
@@ -287,22 +268,19 @@ class TestLeagueClient:
         mock_ini_editor.return_value.update_section.assert_called_once_with("General", "EnableReplayApi", True)
         mock_ini_editor.return_value.save.assert_called_once()
 
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_get_game_input_ini_path_windows(self, league_client):
+    def test_get_game_input_ini_path_windows(self, league_client):
         """Test getting game input.ini path on Windows."""
-        with patch('platform.system', return_value='Windows'):
-            path = await league_client.get_game_input_ini_path()
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
+            path = league_client.get_game_input_ini_path()
             assert "input.ini" in path
             assert "Config" in path
 
-    @pytest.mark.asyncio
-    @pytest.mark.unit
-    async def test_get_game_input_ini_path_unix(self, league_client):
+    def test_get_game_input_ini_path_unix(self, league_client):
         """Test getting game input.ini path on Unix systems."""
-        with patch('platform.system', return_value='Darwin'):
-            path = await league_client.get_game_input_ini_path()
-            assert "input.ini" in path
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=False):
+            with patch.object(league_client.platform_resolver, 'is_macos', return_value=True):
+                path = league_client.get_game_input_ini_path()
+                assert "input.ini" in path
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -357,7 +335,7 @@ class TestLeagueClient:
     @pytest.mark.unit
     def test_get_product_settings_path_windows(self, league_client):
         """Test getting product settings path on Windows."""
-        with patch('platform.system', return_value='Windows'):
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=True):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
             assert "ProgramData" in path
@@ -365,7 +343,7 @@ class TestLeagueClient:
     @pytest.mark.unit
     def test_get_product_settings_path_unix(self, league_client):
         """Test getting product settings path on Unix systems."""
-        with patch('platform.system', return_value='Darwin'):
+        with patch.object(league_client.platform_resolver, 'is_windows', return_value=False):
             path = league_client.get_product_settings_path()
             assert "product_settings.yaml" in path
             assert ".config" in path  # Unix systems use .config directory

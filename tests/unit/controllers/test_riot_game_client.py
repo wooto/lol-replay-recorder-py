@@ -123,10 +123,11 @@ async def test_remove_lockfile(riot_client):
 @pytest.mark.unit
 async def test_get_lockfile_path(riot_client):
     """Test getting lockfile path."""
-    with patch.dict(os.environ, {'LOCALAPPDATA': 'C:\\Users\\Test\\AppData\\Local'}):
+    with patch.object(riot_client.platform_resolver, 'get_riot_client_lockfile_path',
+                     return_value='C:\\Users\\Test\\AppData\\Local\\Riot Games\\Riot Client\\Config\\lockfile'):
         result = await riot_client.get_lockfile_path()
-        expected = Path('C:\\Users\\Test\\AppData\\Local') / 'Riot Games' / 'Riot Client' / 'Config' / 'lockfile'
-        assert result == str(expected)
+        expected = 'C:\\Users\\Test\\AppData\\Local\\Riot Games\\Riot Client\\Config\\lockfile'
+        assert result == expected
 
 
 @pytest.mark.unit
