@@ -5,8 +5,7 @@ from typing import Any
 from ...models.locale import Locale
 from ...domain.errors import CustomError
 from ...services.process.platform import PlatformResolver
-from .editors.yaml import YamlEditor
-from .editors.ini import IniEditor
+from .editors.factory import ConfigEditorFactory
 
 
 class GameSettingsManager:
@@ -15,18 +14,16 @@ class GameSettingsManager:
     def __init__(
         self,
         platform_resolver: PlatformResolver,
-        ini_editor_factory: type[IniEditor] = IniEditor,
-        yaml_editor_factory: type[YamlEditor] = YamlEditor,
+        config_factory: ConfigEditorFactory | None = None,
     ):
         self.platform = platform_resolver
-        self.create_ini_editor = ini_editor_factory
-        self.create_yaml_editor = yaml_editor_factory
+        self.config_factory = config_factory or ConfigEditorFactory()
 
     async def set_locale(self, locale: Locale) -> None:
         """LeagueClient.set_locale() 이동."""
         try:
             yaml_path = self.platform.get_product_settings_path()
-            yaml_editor = self.create_yaml_editor(yaml_path)
+            yaml_editor = self.config_factory.create_yaml_editor(yaml_path)
 
             available_locales = yaml_editor.data.get("locale_data", {}).get("available_locales", [])
             if locale not in available_locales:
@@ -52,7 +49,7 @@ class GameSettingsManager:
 
         for config_path in config_paths:
             try:
-                editor = self.create_ini_editor(config_path)
+                editor = self.config_factory.create_ini_editor(config_path)
 
                 # Apply updates using dot notation or section.key format
                 for path, value in updates.items():
@@ -93,7 +90,7 @@ class GameSettingsManager:
 
         for config_path in config_paths:
             try:
-                editor = self.create_ini_editor(config_path)
+                editor = self.config_factory.create_ini_editor(config_path)
 
                 # Update window mode settings
                 window_mode_updates = {

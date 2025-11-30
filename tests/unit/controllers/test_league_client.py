@@ -12,6 +12,8 @@ from lol_replay_recorder.controllers.league_replay_client import LeagueReplayCli
 from lol_replay_recorder.models.locale import Locale
 from lol_replay_recorder.models.riot_types import Region, PlatformId
 from lol_replay_recorder.domain.errors import CustomError
+from lol_replay_recorder.services.config.game_settings import GameSettingsManager
+from lol_replay_recorder.services.process.platform import PlatformResolver
 from lol_replay_recorder.services.config.editors.yaml import YamlEditor
 from lol_replay_recorder.services.config.editors.ini import IniEditor
 
@@ -79,6 +81,22 @@ class TestLeagueClient:
         assert league_client.riot_game_client is None
         assert league_client.league_client_ux is None
         assert league_client.league_replay_client is None
+        assert league_client._game_settings_manager is None
+
+    @pytest.mark.unit
+    def test_get_game_settings_manager_lazy_initialization(self, league_client):
+        """Test lazy initialization of GameSettingsManager."""
+        # Initially None
+        assert league_client._game_settings_manager is None
+
+        # Get manager triggers creation
+        manager = league_client._get_game_settings_manager()
+        assert manager is not None
+        assert isinstance(manager, GameSettingsManager)
+
+        # Second call returns same instance
+        manager2 = league_client._get_game_settings_manager()
+        assert manager is manager2
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -302,21 +320,45 @@ class TestLeagueClient:
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_set_locale_success(self, league_client, mock_yaml_editor):
-        """Test successfully setting locale."""
-        await league_client.set_locale("en_US")
-        mock_yaml_editor.return_value.update.assert_any_call("locale_data.default_locale", "en_US")
-        mock_yaml_editor.return_value.update.assert_any_call("settings.locale", "en_US")
-        mock_yaml_editor.return_value.save_changes.assert_called_once()
+    async def test_set_locale_success(self, league_client):
+        """Test successfully setting locale via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.set_locale("en_US")
+            mock_game_settings.set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_set_locale_invalid(self, league_client, mock_yaml_editor):
-        """Test setting invalid locale."""
-        mock_yaml_editor.return_value.data["locale_data"]["available_locales"] = ["en_US", "ko_KR"]
+    async def test_set_locale_invalid(self, league_client):
+        """Test setting invalid locale via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+        mock_game_settings.set_locale.side_effect = CustomError("Invalid locale")
 
-        with pytest.raises(CustomError, match="Invalid locale"):
-            await league_client.set_locale("invalid_locale")
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            with pytest.raises(CustomError, match="Invalid locale"):
+                await league_client.set_locale("invalid_locale")
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_update_game_config(self, league_client):
+        """Test updating game configuration via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+        updates = {"General.EnableReplayApi": True, "General.WindowMode": "1"}
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.update_game_config(updates)
+            mock_game_settings.update_game_config.assert_called_once_with(updates)
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_set_window_mode(self, league_client):
+        """Test setting window mode via GameSettingsManager."""
+        mock_game_settings = AsyncMock()
+
+        with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
+            await league_client.set_window_mode(True)
+            mock_game_settings.set_window_mode.assert_called_once_with(True)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
