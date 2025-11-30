@@ -1,12 +1,11 @@
 import os
 import platform
-import subprocess
-import signal
 from typing import Any, Dict, Optional, List
 
 from ..services.config.editors.yaml import YamlEditor
 from ..services.config.editors.ini import IniEditor
 from ..services.process.platform import PlatformResolver
+from ..services.process.manager import ProcessManager
 from ..utils.utils import sleep_in_seconds
 from ..domain.errors import CustomError, ProcessError
 from .riot_game_client import RiotGameClient
@@ -27,9 +26,10 @@ class LeagueClient:
     - Complex workflows spanning multiple controllers
     """
 
-    def __init__(self, platform_resolver: Optional[PlatformResolver] = None) -> None:
+    def __init__(self, platform_resolver: Optional[PlatformResolver] = None, process_manager: Optional[ProcessManager] = None) -> None:
         """Initialize LeagueClient orchestrator."""
         self.platform_resolver = platform_resolver or PlatformResolver()
+        self._process_manager = process_manager or ProcessManager(self.platform_resolver)
         self.riot_game_client: Optional[RiotGameClient] = None
         self.league_client_ux: Optional[LeagueClientUx] = None
         self.league_replay_client: Optional[LeagueReplayClient] = None
@@ -74,149 +74,16 @@ class LeagueClient:
         Raises:
             CustomError: If processes fail to start or locale validation fails
         """
-        await self.stop_riot_processes()
+        # Set locale first (before starting processes)
         await self.set_locale(params["locale"])
 
-        riot_client = self.get_riot_game_client()
-        league_ux = self.get_league_client_ux()
-
-        for attempt in range(5):
-            try:
-                await riot_client.start_riot_client(params["region"], params["locale"])
-                await riot_client.login(params["username"], params["password"], params["region"])
-
-                # Wait for client to be ready
-                await league_ux.wait_for_client_to_be_ready()
-
-                # Verify client is in idle state
-                state = await league_ux.get_state({"retry": 1})
-                if state.get("action") != "Idle":
-                    raise ProcessError(f"Client is not ready: {state.get('action')}")
-
-                break
-
-            except Exception as e:
-                print(f"Error starting Riot processes (attempt {attempt + 1}): {e}")
-                if attempt < 4:  # Don't sleep on last attempt
-                    await sleep_in_seconds(1)
-                await self.stop_riot_processes()
-
-                if attempt == 4:
-                    raise CustomError(f"Failed to start Riot processes after 5 attempts: {e}")
-
-        # Validate locale was set correctly
-        region_locale = await league_ux.get_region_locale(30)
-        if region_locale["locale"] != params["locale"]:
-            raise CustomError(
-                f"Locale is not correct: expected {params['locale']}, got {region_locale['locale']}"
-            )
-
-        await sleep_in_seconds(5)
+        # Delegate to ProcessManager for process management
+        await self._process_manager.start_safely(params)
 
     async def stop_riot_processes(self) -> None:
         """Stop all Riot-related processes and clean up lockfiles."""
-        if self.platform_resolver.is_windows():
-            await self._stop_windows_processes()
-        else:
-            await self._stop_unix_processes()
-
-        # Clean up lockfiles
-        riot_client = self.get_riot_game_client()
-        league_ux = self.get_league_client_ux()
-
-        try:
-            await riot_client.remove_lockfile()
-        except Exception:
-            pass  # Ignore lockfile removal errors
-
-        try:
-            await league_ux.remove_lockfile()
-        except Exception:
-            pass  # Ignore lockfile removal errors
-
-    async def _stop_windows_processes(self) -> None:
-        """Stop Riot processes on Windows."""
-        processes = [
-            "RiotClientUx.exe",
-            "RiotClientServices.exe",
-            "RiotClient.exe",
-            "Riot Client.exe",
-            "LeagueClient.exe",
-            "League of Legends.exe",
-            "LeagueClientUxRender.exe"
-        ]
-
-        # Kill processes
-        for process in processes:
-            try:
-                subprocess.run(
-                    f"taskkill /F /IM \"{process}\" /T",
-                    shell=True,
-                    capture_output=True
-                )
-            except Exception:
-                pass  # Ignore process kill errors
-
-        # Wait for processes to fully terminate
-        for process in processes:
-            for _ in range(30):
-                try:
-                    result = subprocess.run(
-                        f"tasklist /FI \"IMAGENAME eq {process}\"",
-                        shell=True,
-                        capture_output=True,
-                        text=True
-                    )
-                    if process not in result.stdout:
-                        break
-                    await sleep_in_seconds(1)
-                except Exception:
-                    break
-
-    async def _stop_unix_processes(self) -> None:
-        """Stop Riot processes on Unix systems (macOS/Linux)."""
-        process_names = [
-            "LeagueClientUx",
-            "RiotClientServices",
-            "RiotClient",
-            "LeagueClient",
-            "League of Legends",
-        ]
-
-        for process_name in process_names:
-            try:
-                # Find and kill processes
-                result = subprocess.run(
-                    ["pgrep", "-f", process_name],
-                    capture_output=True,
-                    text=True
-                )
-
-                if result.returncode == 0:
-                    pids = result.stdout.strip().split('\n')
-                    for pid in pids:
-                        if pid.strip():
-                            try:
-                                os.kill(int(pid.strip()), signal.SIGTERM)
-                            except (ValueError, ProcessLookupError):
-                                pass
-
-            except Exception:
-                pass  # Ignore errors
-
-            # Wait for process to terminate
-            for _ in range(10):
-                try:
-                    result = subprocess.run(
-                        ["pgrep", "-f", process_name],
-                        capture_output=True,
-                        text=True
-                    )
-                    if result.returncode != 0:
-                        break
-                    await sleep_in_seconds(1)
-                except Exception:
-                    break
+        # Delegate to ProcessManager
+        await self._process_manager.stop_riot_processes()
 
     # PATH AND INSTALLATION MANAGEMENT //
 
@@ -313,7 +180,7 @@ class LeagueClient:
     async def set_default_input_ini(self) -> None:
         """Set default key bindings for player selection in input.ini."""
         try:
-            input_path = await self.get_game_input_ini_path()
+            input_path = self.get_game_input_ini_path()
             editor = IniEditor(input_path)
 
             # Set player selection key bindings
