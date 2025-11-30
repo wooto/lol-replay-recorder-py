@@ -9,3 +9,13 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/test.yml
+
+  status-check:
+    name: All Tests Passed
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    steps:
+      - name: Check test results
+        run: exit 1
+        if: needs.test.result != 'success'

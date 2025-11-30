@@ -32,8 +32,9 @@ GitHub Actions 워크플로우의 중복 코드를 제거하고 재사용 가능
 
 ### ci.yml (단순화)
 
-- test.yml을 호출만 함
+- test.yml을 호출
 - 기존 test job의 모든 단계 제거
+- aggregation job 추가: "All Tests Passed" status check로 단일 진입점 제공
 
 ### publish.yml (단순화)
 
@@ -47,3 +48,16 @@ GitHub Actions 워크플로우의 중복 코드를 제거하고 재사용 가능
 2. **일관성**: CI와 publish가 동일한 테스트 프로세스 사용
 3. **유지보수성**: 테스트 단계 수정 시 test.yml만 변경하면 됨
 4. **더 강력한 품질 보장**: publish 시에도 모든 OS, 전체 테스트 실행
+5. **간단한 branch protection**: "All Tests Passed" 하나만 required status check로 설정
+
+## Required Status Check 처리
+
+Reusable workflow 사용 시 job 이름이 `test / test (os)` 형식으로 변경되는 문제를 aggregation job 패턴으로 해결:
+
+- `status-check` job이 test job의 성공 여부를 확인
+- Branch protection에서는 "All Tests Passed" 하나만 required로 설정
+- Reusable workflow 내부 변경에 영향받지 않음
+
+**참고:**
+- [GitHub Community Discussion #12395](https://github.com/orgs/community/discussions/12395)
+- [GitHub Community Discussion #72708](https://github.com/orgs/community/discussions/72708)
