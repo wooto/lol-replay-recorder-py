@@ -109,28 +109,20 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components
-        mock_riot_client = AsyncMock()
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "en_US", "region": "na"}
-        mock_league_ux.get_state.return_value = {"action": "Idle"}
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                await league_client.start_riot_processes_safely(params)
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes') as mock_stop:
-                    with patch.object(league_client, 'set_locale') as mock_set_locale:
-                        await league_client.start_riot_processes_safely(params)
+                # Verify set_locale was called with correct locale
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
-                        # Verify all steps were called
-                        mock_stop.assert_called_once()
-                        mock_set_locale.assert_called_once_with(Locale.en_US)
-                        mock_riot_client.start_riot_client.assert_called_once()
-                        mock_riot_client.login.assert_called_once_with("test_user", "test_pass", PlatformId.NA)
+                # Verify process manager's start_safely was called with params
+                mock_start_safely.assert_called_once_with(params)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_start_riot_processes_safely_retry_logic(self, league_client, mock_asyncio_subprocess):
-        """Test retry logic when starting Riot processes."""
+    async def test_start_riot_processes_safely_propagates_errors(self, league_client, mock_asyncio_subprocess):
+        """Test that errors from process manager are propagated."""
         params = {
             "region": PlatformId.NA,
             "locale": Locale.en_US,
@@ -138,29 +130,19 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components with failure then success
-        mock_riot_client = AsyncMock()
-        call_count = 0
-        async def mock_start_riot_client(*args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                raise Exception("Failed")
-            return None
-        mock_riot_client.start_riot_client.side_effect = mock_start_riot_client
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "en_US", "region": "na"}
-        mock_league_ux.get_state.side_effect = [{"action": "Busy"}, {"action": "Idle"}]
+        # Mock process manager to raise error
+        async def mock_start_safely_impl(*args, **kwargs):
+            raise Exception("Failed to start processes")
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes') as mock_stop:
-                    with patch.object(league_client, 'set_locale') as mock_set_locale:
-                        with patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
-                            await league_client.start_riot_processes_safely(params)
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                mock_start_safely.side_effect = mock_start_safely_impl
 
-                            # Should retry at least once
-                            assert mock_sleep.call_count >= 1
+                with pytest.raises(Exception, match="Failed to start processes"):
+                    await league_client.start_riot_processes_safely(params)
+
+                # Verify set_locale was called before error
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -173,36 +155,29 @@ class TestLeagueClient:
             "password": "test_pass"
         }
 
-        # Mock sub-components with wrong locale
-        mock_riot_client = AsyncMock()
-        mock_league_ux = AsyncMock()
-        mock_league_ux.get_region_locale.return_value = {"locale": "ko_KR", "region": "na"}  # Wrong locale
-        mock_league_ux.get_state.return_value = {"action": "Idle"}
+        # Mock process manager to raise locale mismatch error
+        async def mock_start_safely_with_error(*args, **kwargs):
+            raise CustomError("Locale is not correct")
 
-        with patch('lol_replay_recorder.controllers.league_client.RiotGameClient', return_value=mock_riot_client):
-            with patch('lol_replay_recorder.controllers.league_client.LeagueClientUx', return_value=mock_league_ux):
-                with patch.object(league_client, 'stop_riot_processes'):
-                    with patch.object(league_client, 'set_locale'):
-                        with pytest.raises(CustomError, match="Locale is not correct"):
-                            await league_client.start_riot_processes_safely(params)
+        with patch.object(league_client, 'set_locale') as mock_set_locale:
+            with patch.object(league_client._process_manager, 'start_safely', new_callable=AsyncMock) as mock_start_safely:
+                mock_start_safely.side_effect = mock_start_safely_with_error
+
+                with pytest.raises(CustomError, match="Locale is not correct"):
+                    await league_client.start_riot_processes_safely(params)
+
+                # Verify set_locale was called before error
+                mock_set_locale.assert_called_once_with(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_stop_riot_processes_windows(self, league_client, mock_subprocess):
-        """Test stopping Riot processes on Windows."""
-        with patch('platform.system', return_value='Windows'):
-            # Mock tasklist to show processes are running then not running
-            mock_subprocess.run.side_effect = [
-                MagicMock(returncode=0, stdout="RiotClientUx.exe\n"),  # First check - process running
-                MagicMock(returncode=1),  # Second check - process not found
-                MagicMock(returncode=0, stdout="LeagueClient.exe\n"),  # Third check - process running
-                MagicMock(returncode=1),  # Fourth check - process not found
-            ]
-
+    async def test_stop_riot_processes_windows(self, league_client):
+        """Test stopping Riot processes delegates to ProcessManager."""
+        with patch.object(league_client._process_manager, 'stop_riot_processes', new_callable=AsyncMock) as mock_stop:
             await league_client.stop_riot_processes()
 
-            # Should attempt to kill processes
-            assert mock_subprocess.run.call_count >= 2
+            # Verify ProcessManager's stop_riot_processes was called
+            mock_stop.assert_called_once()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -331,13 +306,13 @@ class TestLeagueClient:
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_set_locale_invalid(self, league_client):
-        """Test setting invalid locale via GameSettingsManager."""
+        """Test setting locale when GameSettingsManager raises error."""
         mock_game_settings = AsyncMock()
-        mock_game_settings.set_locale.side_effect = CustomError("Invalid locale")
+        mock_game_settings.set_locale.side_effect = CustomError("Failed to set locale")
 
         with patch.object(league_client, '_get_game_settings_manager', return_value=mock_game_settings):
-            with pytest.raises(CustomError, match="Invalid locale"):
-                await league_client.set_locale("invalid_locale")
+            with pytest.raises(CustomError, match="Failed to set locale"):
+                await league_client.set_locale(Locale.en_US)
 
     @pytest.mark.asyncio
     @pytest.mark.unit
