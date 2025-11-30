@@ -35,6 +35,7 @@ from lol_replay_recorder.models.replay_type import (
     ColorRGBA,
     # Union types
     LiveGameInput,
+    validate_typed_dict,
 )
 
 
@@ -47,7 +48,7 @@ class TestRecordingProperties:
         def process_recording(props: RecordingProperties) -> RecordingProperties:
             return props
 
-        # This should fail at runtime if the structure is wrong
+        # Test explicit validation for missing required fields
         with pytest.raises(KeyError):
             # Missing required field
             invalid_props = {
@@ -56,7 +57,7 @@ class TestRecordingProperties:
                 "startTime": 1234567890,
                 # Missing endTime
             }
-            process_recording(invalid_props)
+            validate_typed_dict(RecordingProperties, invalid_props)
 
     def test_recording_properties_valid(self):
         """Test valid RecordingProperties creation"""
@@ -86,13 +87,14 @@ class TestRenderProperties:
         def process_render(props: RenderProperties) -> RenderProperties:
             return props
 
+        # Test explicit validation for missing required fields
         with pytest.raises(KeyError):
             # Missing required field
             invalid_props = {
                 "outputPath": "/path/to/output",
                 # Missing resolution
             }
-            process_render(invalid_props)
+            validate_typed_dict(RenderProperties, invalid_props)
 
     def test_render_properties_valid(self):
         """Test valid RenderProperties creation"""
@@ -121,13 +123,14 @@ class TestGameData:
         def process_game_data(data: GameData) -> GameData:
             return data
 
+        # Test explicit validation for missing required fields
         with pytest.raises(KeyError):
             # Missing required field
             invalid_data = {
                 "gameId": "12345",
                 # Missing platformId
             }
-            process_game_data(invalid_data)
+            validate_typed_dict(GameData, invalid_data)
 
     def test_game_data_valid(self):
         """Test valid GameData creation"""

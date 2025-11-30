@@ -2,8 +2,26 @@
 
 from __future__ import annotations
 
-from typing import TypedDict, List, Dict, Any, Optional, Union
+from typing import TypedDict, List, Dict, Any, Union
 from typing_extensions import NotRequired
+
+
+def validate_typed_dict(typed_dict_class: type, data: Dict[str, Any]) -> None:
+    """
+    Validate that a dictionary contains all required keys for a TypedDict.
+
+    Args:
+        typed_dict_class: The TypedDict class to validate against
+        data: The dictionary to validate
+
+    Raises:
+        KeyError: If required keys are missing
+    """
+    required_keys: set[str] = getattr(typed_dict_class, '__required_keys__', set())
+    missing_keys = required_keys - data.keys()
+    if missing_keys:
+        missing_key = next(iter(missing_keys))  # Get first missing key
+        raise KeyError(missing_key)
 
 
 class RecordingProperties(TypedDict):

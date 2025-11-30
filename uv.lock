@@ -53,7 +53,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -203,10 +203,13 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
+    { name = "pygetwindow" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-mock" },
     { name = "ruff" },
+    { name = "types-pyautogui" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -221,10 +224,13 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=1.8.0" },
+    { name = "pygetwindow", specifier = ">=0.0.9" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.23.0" },
     { name = "pytest-mock", specifier = ">=3.12.0" },
     { name = "ruff", specifier = ">=0.1.0" },
+    { name = "types-pyautogui", specifier = ">=0.9.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.0" },
 ]
 
 [[package]]
@@ -761,6 +767,39 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/46/cc36c679f09f27ded940281c38607716c86cf8ba4a518d524e349c8b4874/tomli-2.3.0-cp314-cp314t-win32.whl", hash = "sha256:a1f7f282fe248311650081faafa5f4732bdbfef5d45fe3f2e702fbc6f2d496e0", size = 107563, upload-time = "2025-10-08T22:01:44.233Z" },
     { url = "https://files.pythonhosted.org/packages/84/ff/426ca8683cf7b753614480484f6437f568fd2fda2edbdf57a2d3d8b27a0b/tomli-2.3.0-cp314-cp314t-win_amd64.whl", hash = "sha256:70a251f8d4ba2d9ac2542eecf008b3c8a9fc5c3f9f02c56a9d7952612be2fdba", size = 119756, upload-time = "2025-10-08T22:01:45.234Z" },
     { url = "https://files.pythonhosted.org/packages/77/b8/0135fadc89e73be292b473cb820b4f5a08197779206b33191e801feeae40/tomli-2.3.0-py3-none-any.whl", hash = "sha256:e95b1af3c5b07d9e643909b5abbec77cd9f1217e6d0bca72b0234736b9fb1f1b", size = 14408, upload-time = "2025-10-08T22:01:46.04Z" },
+]
+
+[[package]]
+name = "types-pyautogui"
+version = "0.9.3.20241230"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-pyscreeze" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9b/b2/29e9a680f1eec37421261f8035310bccb74e7ffe51c108ab616149248086/types_pyautogui-0.9.3.20241230.tar.gz", hash = "sha256:e075f9815a4e7181dc3a63dabb5f266be7dbe9534fa9cb538075795db76d98ae", size = 9186, upload-time = "2024-12-30T02:44:52.239Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/51/b6e787b2837fa7e564ff27784630911db953c4c17f91d39c1814e0651e8a/types_PyAutoGUI-0.9.3.20241230-py3-none-any.whl", hash = "sha256:314a5e59bbb6292e53b41c7bbd4edb1197564b3dd00f569d3bc2f3f62bdc116c", size = 9020, upload-time = "2024-12-30T02:44:50.257Z" },
+]
+
+[[package]]
+name = "types-pyscreeze"
+version = "1.0.1.20250801"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/ca/3d985f56303380bc028ec156f09f82479e6ebd21c7a4e1300108d4b9547c/types_pyscreeze-1.0.1.20250801.tar.gz", hash = "sha256:3780fadab237fca7e2ccb72928e36d04ef8a9cc93c5f5bdad7aff7a24e20004f", size = 9145, upload-time = "2025-08-01T03:48:49.18Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/26/a1c2148014d0879bea6765402be1ebcc673317772174daabeb1b50b6ae15/types_pyscreeze-1.0.1.20250801-py3-none-any.whl", hash = "sha256:2a01abe6bac94ba9d97ce9d5f89c8e025443831f72309f1bd410a5fad45c6758", size = 8649, upload-time = "2025-08-01T03:48:48.364Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20250915"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/69/3c51b36d04da19b92f9e815be12753125bd8bc247ba0470a982e6979e71c/types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3", size = 17522, upload-time = "2025-09-15T03:01:00.728Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/e0/1eed384f02555dde685fff1a1ac805c1c7dcb6dd019c916fe659b1c1f9ec/types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6", size = 20338, upload-time = "2025-09-15T03:00:59.218Z" },
 ]
 
 [[package]]

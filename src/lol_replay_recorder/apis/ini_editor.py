@@ -1,5 +1,4 @@
 import configparser
-from pathlib import Path
 from typing import Any
 
 
@@ -19,7 +18,7 @@ class IniEditor:
                 raise FileNotFoundError(f"INI file not found: {self.filename}")
 
             config = configparser.ConfigParser()
-            config.optionxform = str  # Preserve case of keys
+            config.optionxform = str  # type: ignore[assignment]  # Preserve case of keys
             result = config.read(self.filename)
 
             # Check if file was successfully read
@@ -34,7 +33,7 @@ class IniEditor:
     def save(self) -> None:
         """Save current data back to INI file."""
         config = configparser.ConfigParser()
-        config.optionxform = str  # Preserve case of keys
+        config.optionxform = str  # type: ignore[assignment]  # Preserve case of keys
         for section, values in self.data.items():
             config[section] = values
 

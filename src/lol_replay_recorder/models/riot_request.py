@@ -1,5 +1,4 @@
 import httpx
-import ssl
 from typing import Any
 from .custom_error import CustomError
 

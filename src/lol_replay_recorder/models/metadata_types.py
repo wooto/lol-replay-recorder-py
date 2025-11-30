@@ -3,7 +3,18 @@
 from __future__ import annotations
 
 from typing import TypedDict
-from typing_extensions import NotRequired
+
+# Re-export TeamInfo from replay_types for compatibility
+from .replay_type import TeamInfo
+
+__all__ = [
+    "SummonerTeamInfo",
+    "TeamDetails",
+    "Summoner",
+    "PlayerInfo",
+    "SelectorData",
+    "TeamInfo",
+]
 
 
 class SummonerTeamInfo(TypedDict):
@@ -40,7 +51,3 @@ class PlayerInfo(TypedDict):
 class SelectorData(TypedDict):
     """Selector data matching TypeScript version"""
     game_id: str
-
-
-# Re-export TeamInfo from replay_types for compatibility
-from .replay_type import TeamInfo

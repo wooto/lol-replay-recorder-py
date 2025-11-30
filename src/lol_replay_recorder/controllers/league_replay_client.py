@@ -13,7 +13,7 @@ os.environ["PYTHONHTTPSVERIFY"] = "0"
 class LeagueReplayClient:
     """Client for interacting with League of Legends Replay API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.url = "https://127.0.0.1:2999"
         self.pid: int | None = None
 
@@ -37,6 +37,9 @@ class LeagueReplayClient:
         replay_data = await make_request("GET", f"{self.url}/replay/game")
         if replay_data and "processID" in replay_data:
             self.pid = replay_data["processID"]
+
+        if self.pid is None:
+            raise RuntimeError("Could not get replay process ID")
         return self.pid
 
     async def exit(self) -> None:
@@ -80,7 +83,7 @@ class LeagueReplayClient:
                 await self.get_playback_properties()
                 await self.get_recording_properties()
                 response_received = True
-            except Exception as err:
+            except Exception:
                 num_retries -= 1
                 print(
                     f"Couldn't connect to replay API, waiting {timeout} seconds "
@@ -116,7 +119,7 @@ class LeagueReplayClient:
             recording = recording_state.get("recording", False)
             current_time = recording_state.get("currentTime", 0)
             end_time = recording_state.get("endTime", 0)
-            wait_time = end_time - current_time
+            wait_time = end_time - current_time  # type: ignore[operator]
 
             if not recording or wait_time <= 0:
                 break
@@ -130,8 +133,9 @@ class LeagueReplayClient:
         data = await self.get_all_game_data()
         all_players = data.get("allPlayers", [])
 
-        order_team = [p for p in all_players if p.get("team") == "ORDER"]
-        chaos_team = [p for p in all_players if p.get("team") == "CHAOS"]
+        # all_players is assumed to be iterable from API response
+        order_team = [p for p in all_players if isinstance(p, dict) and p.get("team") == "ORDER"]  # type: ignore[attr-defined]
+        chaos_team = [p for p in all_players if isinstance(p, dict) and p.get("team") == "CHAOS"]  # type: ignore[attr-defined]
 
         # Check ORDER team
         for i, player in enumerate(order_team):

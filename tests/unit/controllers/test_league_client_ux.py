@@ -291,10 +291,7 @@ class TestLeagueClientUx:
         assert result == expected_path
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-replays/v1/rofls/path',
-            'GET',
-            None,
-            3
+            '/lol-replays/v1/rofls/path'
         )
 
     @pytest.mark.asyncio
@@ -349,9 +346,8 @@ class TestLeagueClientUx:
             mock_lcu_request.assert_called_with(
                 "/test/lockfile",
                 f'/lol-replays/v1/rofls/{match_id}/watch',
-                'POST',
-                None,
-                10
+                method='POST',
+                retries=10
             )
 
     @pytest.mark.asyncio
@@ -366,10 +362,7 @@ class TestLeagueClientUx:
         assert result == expected_data
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            f'/lol-match-history/v1/games/{match_id}',
-            'GET',
-            None,
-            3
+            f'/lol-match-history/v1/games/{match_id}'
         )
 
     @pytest.mark.asyncio
@@ -384,10 +377,7 @@ class TestLeagueClientUx:
         assert result == expected_summoners
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            f'/lol-summoner/v1/summoners?name={riot_id}',
-            'GET',
-            None,
-            3
+            f'/lol-summoner/v1/summoners?name={riot_id}'
         )
 
     @pytest.mark.asyncio
@@ -407,10 +397,7 @@ class TestLeagueClientUx:
         assert result == expected_games
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            f'/lol-match-history/v1/products/lol/{puuid}/matches?begIndex={beg_index}&endIndex={end_index}',
-            'GET',
-            None,
-            3
+            f'/lol-match-history/v1/products/lol/{puuid}/matches?begIndex={beg_index}&endIndex={end_index}'
         )
 
     @pytest.mark.asyncio
@@ -426,10 +413,7 @@ class TestLeagueClientUx:
         assert result == expected_frames
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            f'/lol-match-history/v1/game-timelines/{match_id}',
-            'GET',
-            None,
-            3
+            f'/lol-match-history/v1/game-timelines/{match_id}'
         )
 
     @pytest.mark.asyncio
@@ -453,10 +437,7 @@ class TestLeagueClientUx:
         assert league_client_ux.patch == expected_patch
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-patch/v1/game-version',
-            'GET',
-            None,
-            3
+            '/lol-patch/v1/game-version'
         )
 
     @pytest.mark.asyncio
@@ -487,10 +468,7 @@ class TestLeagueClientUx:
         assert result == expected_queues
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            'lol-game-queues/v1/queues',
-            'GET',
-            None,
-            3
+            'lol-game-queues/v1/queues'
         )
 
     @pytest.mark.asyncio
@@ -511,10 +489,7 @@ class TestLeagueClientUx:
         assert result.puuid == "test-puuid-123"
         mock_lcu_request.assert_called_once_with(
             "/test/lockfile",
-            '/lol-summoner/v1/current-summoner',
-            'GET',
-            None,
-            3
+            '/lol-summoner/v1/current-summoner'
         )
 
     @pytest.mark.asyncio
@@ -539,7 +514,7 @@ class TestLeagueClientUx:
             assert "LeagueClient.exe" in call_args[0]
 
             # Check that parameters are included
-            args = call_args[1]
+            args = list(call_args)  # Convert to list to access all args
             assert any("--region=NA" in str(arg) for arg in args)
             assert any("--locale=en_US" in str(arg) for arg in args)
 

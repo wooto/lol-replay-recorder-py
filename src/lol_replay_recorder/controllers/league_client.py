@@ -1,16 +1,12 @@
-import asyncio
 import os
 import platform
 import subprocess
 import signal
-from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 from ..apis.yaml_editor import YamlEditor
 from ..apis.ini_editor import IniEditor
 from ..utils.utils import sleep_in_seconds
-from ..models.locale import Locale
-from ..models.riot_types import Region
 from ..models.custom_error import CustomError
 from .riot_game_client import RiotGameClient
 from .league_client_ux import LeagueClientUx
@@ -30,7 +26,7 @@ class LeagueClient:
     - Complex workflows spanning multiple controllers
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize LeagueClient orchestrator."""
         self.riot_game_client: Optional[RiotGameClient] = None
         self.league_client_ux: Optional[LeagueClientUx] = None
@@ -213,7 +209,8 @@ class LeagueClient:
                 try:
                     result = subprocess.run(
                         ["pgrep", "-f", process_name],
-                        capture_output=True
+                        capture_output=True,
+                        text=True
                     )
                     if result.returncode != 0:
                         break

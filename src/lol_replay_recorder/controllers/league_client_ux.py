@@ -1,12 +1,9 @@
 import asyncio
 import os
 import platform
-import subprocess
 from typing import Any, Dict, Optional
 
 from ..models.lcu_request import make_lcu_request
-from ..models.locale import Locale
-from ..models.riot_types import PlatformId, Region
 from ..models.summoner import Summoner
 from ..models.custom_error import CustomError
 from ..utils.utils import sleep_in_seconds, refine_region
@@ -36,13 +33,13 @@ class LeagueClientUx:
         self.lockfile_path: str = lockfile_path or ""
         self.window_handler: WindowHandler = WindowHandler()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "LeagueClientUx":
         """Async context manager entry."""
         if not self.lockfile_path:
             self.lockfile_path = await self.get_lockfile_path()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         pass
 
@@ -68,9 +65,8 @@ class LeagueClientUx:
             ]
 
             try:
-                process = await asyncio.create_subprocess_exec(
+                await asyncio.create_subprocess_exec(
                     *cmd_args,
-                    shell=True
                 )
 
                 # Wait for process to complete or let it run in background
@@ -96,7 +92,7 @@ class LeagueClientUx:
             ]
 
             try:
-                process = await asyncio.create_subprocess_exec(*cmd_args)
+                await asyncio.create_subprocess_exec(*cmd_args)
                 # await process.communicate()  # Uncomment if you want to wait for completion
 
             except Exception as e:
@@ -387,7 +383,7 @@ class LeagueClientUx:
             f"/lol-summoner/v1/summoners?name={riot_id}"
         )
 
-    async def get_match_history_by_puuid(self, puuid: str, beg_index: int, end_index: int) -> list:
+    async def get_match_history_by_puuid(self, puuid: str, beg_index: int, end_index: int) -> list[Any]:
         """
         Get match history for a summoner by PUUID.
 
@@ -405,7 +401,7 @@ class LeagueClientUx:
         )
         return match_data.get("games", {}).get("games", [])
 
-    async def get_match_timeline_by_match_id(self, match_id: str) -> list:
+    async def get_match_timeline_by_match_id(self, match_id: str) -> list[Any]:
         """
         Get match timeline data for a specific match.
 
@@ -464,7 +460,7 @@ class LeagueClientUx:
             retry
         )
 
-    async def get_queues(self) -> list:
+    async def get_queues(self) -> list[Any]:
         """Get available game queues."""
         return await make_lcu_request(
             self.lockfile_path,

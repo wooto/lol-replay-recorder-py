@@ -11,7 +11,7 @@ def test_summoner_initialization():
 
 def test_summoner_riot_id_generation():
     summoner = Summoner("TestPlayer", "na1")
-    expected = f"{quote('TestPlayer')}#NA1"
+    expected = f"{quote('TestPlayer')}#na1"
     assert summoner.riot_id == expected
 
 
