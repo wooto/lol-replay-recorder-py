@@ -1,6 +1,7 @@
 """Tests for Riot API types."""
 
 import unittest
+import pytest
 
 from lol_replay_recorder.models.riot_types import PlatformId, Region, Cluster
 
@@ -8,6 +9,7 @@ from lol_replay_recorder.models.riot_types import PlatformId, Region, Cluster
 class TestPlatformId(unittest.TestCase):
     """Test PlatformId enum."""
 
+    @pytest.mark.unit
     def test_platform_id_values(self):
         """Test PlatformId enum has correct values."""
         self.assertEqual(PlatformId.NA1.value, "na1")
@@ -40,6 +42,7 @@ class TestPlatformId(unittest.TestCase):
         self.assertEqual(PlatformId.ESPORTS.value, "esports")
         self.assertEqual(PlatformId.APAC.value, "apac")
 
+    @pytest.mark.unit
     def test_platform_id_count(self):
         """Test PlatformId enum has correct number of values."""
         self.assertEqual(len(PlatformId), 27)
@@ -48,11 +51,13 @@ class TestPlatformId(unittest.TestCase):
 class TestTypeAliases(unittest.TestCase):
     """Test type aliases."""
 
+    @pytest.mark.unit
     def test_region_alias(self):
         """Test Region type alias."""
         # Region should be a string
         self.assertIs(str, Region)
 
+    @pytest.mark.unit
     def test_cluster_alias(self):
         """Test Cluster type alias."""
         # Cluster should be a string

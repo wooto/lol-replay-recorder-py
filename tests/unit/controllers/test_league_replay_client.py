@@ -4,6 +4,7 @@ from lol_replay_recorder.controllers.league_replay_client import LeagueReplayCli
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_league_replay_client_initialization():
     client = LeagueReplayClient()
     assert client.url == "https://127.0.0.1:2999"
@@ -11,6 +12,7 @@ async def test_league_replay_client_initialization():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_playback_properties():
     client = LeagueReplayClient()
 
@@ -26,6 +28,7 @@ async def test_get_playback_properties():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_recording_properties():
     client = LeagueReplayClient()
 
@@ -41,6 +44,7 @@ async def test_get_recording_properties():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_render_properties():
     client = LeagueReplayClient()
 
@@ -56,6 +60,7 @@ async def test_get_render_properties():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_post_playback_properties():
     client = LeagueReplayClient()
 
@@ -73,6 +78,7 @@ async def test_post_playback_properties():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_set_and_get_process_id():
     client = LeagueReplayClient()
 
@@ -85,6 +91,7 @@ async def test_set_and_get_process_id():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_process_id_from_api():
     client = LeagueReplayClient()
 
@@ -101,6 +108,7 @@ async def test_get_process_id_from_api():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_get_all_game_data():
     client = LeagueReplayClient()
 

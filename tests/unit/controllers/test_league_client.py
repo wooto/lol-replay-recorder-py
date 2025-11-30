@@ -73,6 +73,7 @@ class TestLeagueClient:
             mock.return_value = mock_instance
             yield mock
 
+    @pytest.mark.unit
     def test_init(self, league_client):
         """Test LeagueClient initialization."""
         assert league_client.riot_game_client is None
@@ -80,6 +81,7 @@ class TestLeagueClient:
         assert league_client.league_replay_client is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_start_riot_processes_safely_success(self, league_client, mock_asyncio_subprocess):
         """Test successful start of Riot processes."""
         params = {
@@ -108,6 +110,7 @@ class TestLeagueClient:
                         mock_riot_client.login.assert_called_once_with("test_user", "test_pass", PlatformId.NA)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_start_riot_processes_safely_retry_logic(self, league_client, mock_asyncio_subprocess):
         """Test retry logic when starting Riot processes."""
         params = {
@@ -142,6 +145,7 @@ class TestLeagueClient:
                             assert mock_sleep.call_count >= 1
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_start_riot_processes_safely_locale_mismatch(self, league_client, mock_asyncio_subprocess):
         """Test locale mismatch error when starting Riot processes."""
         params = {
@@ -165,6 +169,7 @@ class TestLeagueClient:
                             await league_client.start_riot_processes_safely(params)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_stop_riot_processes_windows(self, league_client, mock_subprocess):
         """Test stopping Riot processes on Windows."""
         with patch('platform.system', return_value='Windows'):
@@ -182,6 +187,7 @@ class TestLeagueClient:
             assert mock_subprocess.run.call_count >= 2
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_stop_riot_processes_unix(self, league_client):
         """Test stopping Riot processes on Unix systems."""
         with patch('platform.system', return_value='Darwin'):
@@ -194,6 +200,7 @@ class TestLeagueClient:
                     await league_client.stop_riot_processes()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_find_windows_installed_success(self, league_client):
         """Test finding Windows installation when League of Legends is installed."""
         with patch('platform.system', return_value='Windows'):
@@ -203,6 +210,7 @@ class TestLeagueClient:
                 assert all("League of Legends" in path for path in paths)
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_find_windows_installed_not_found(self, league_client):
         """Test finding Windows installation when League of Legends is not installed."""
         with patch('platform.system', return_value='Windows'):
@@ -211,6 +219,7 @@ class TestLeagueClient:
                 assert len(paths) == 0
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_installed_paths(self, league_client):
         """Test getting installed paths."""
         with patch('platform.system', return_value='Windows'):
@@ -219,6 +228,7 @@ class TestLeagueClient:
                 assert paths == ["C:\\Riot Games\\League of Legends"]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_config_file_paths(self, league_client):
         """Test getting config file paths."""
         with patch.object(league_client, 'get_installed_paths', return_value=["C:\\Riot Games\\League of Legends"]):
@@ -227,6 +237,7 @@ class TestLeagueClient:
                 assert paths == ["C:\\Riot Games\\League of Legends\\Config\\game.cfg"]
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_config_file_path_success(self, league_client):
         """Test successful config file path resolution."""
         initial_path = "C:\\Riot Games\\League of Legends"
@@ -235,6 +246,7 @@ class TestLeagueClient:
             assert "game.cfg" in config_path
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_config_file_path_not_found(self, league_client):
         """Test config file path not found."""
         initial_path = "C:\\Nonexistent\\Path"
@@ -243,6 +255,7 @@ class TestLeagueClient:
             assert config_path is None
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_is_game_enabled_true(self, league_client, mock_ini_editor):
         """Test checking if replay API is enabled (true case)."""
         mock_ini_editor.return_value.data["config"]["General"]["EnableReplayApi"] = 1
@@ -250,6 +263,7 @@ class TestLeagueClient:
         assert result is True
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_is_game_enabled_false(self, league_client, mock_ini_editor):
         """Test checking if replay API is enabled (false case)."""
         mock_ini_editor.return_value.data["config"]["General"]["EnableReplayApi"] = 0
@@ -257,6 +271,7 @@ class TestLeagueClient:
         assert result is False
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_is_game_enabled_error(self, league_client, mock_ini_editor):
         """Test checking if replay API is enabled with error."""
         mock_ini_editor.side_effect = Exception("Config file not found")
@@ -264,6 +279,7 @@ class TestLeagueClient:
         assert result is False
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_set_game_enabled(self, league_client, mock_ini_editor):
         """Test setting replay API enabled/disabled."""
         await league_client.set_game_enabled("test_path", True)
@@ -272,6 +288,7 @@ class TestLeagueClient:
         mock_ini_editor.return_value.save.assert_called_once()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_game_input_ini_path_windows(self, league_client):
         """Test getting game input.ini path on Windows."""
         with patch('platform.system', return_value='Windows'):
@@ -280,6 +297,7 @@ class TestLeagueClient:
             assert "Config" in path
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_get_game_input_ini_path_unix(self, league_client):
         """Test getting game input.ini path on Unix systems."""
         with patch('platform.system', return_value='Darwin'):
@@ -287,6 +305,7 @@ class TestLeagueClient:
             assert "input.ini" in path
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_set_default_input_ini(self, league_client, mock_ini_editor):
         """Test setting default input.ini configuration."""
         with patch.object(league_client, 'get_game_input_ini_path', return_value="test_input.ini"):
@@ -307,6 +326,7 @@ class TestLeagueClient:
             mock_ini_editor.return_value.save.assert_called_once()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_set_locale_success(self, league_client, mock_yaml_editor):
         """Test successfully setting locale."""
         await league_client.set_locale("en_US")
@@ -315,6 +335,7 @@ class TestLeagueClient:
         mock_yaml_editor.return_value.save_changes.assert_called_once()
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_set_locale_invalid(self, league_client, mock_yaml_editor):
         """Test setting invalid locale."""
         mock_yaml_editor.return_value.data["locale_data"]["available_locales"] = ["en_US", "ko_KR"]
@@ -323,6 +344,7 @@ class TestLeagueClient:
             await league_client.set_locale("invalid_locale")
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_focus_client_window(self, league_client):
         """Test focusing client window."""
         mock_window_handler = AsyncMock()
@@ -332,6 +354,7 @@ class TestLeagueClient:
             await league_client.focus_client_window()
             mock_window_handler.focus_client_window.assert_called_once_with("League of Legends (TM)")
 
+    @pytest.mark.unit
     def test_get_product_settings_path_windows(self, league_client):
         """Test getting product settings path on Windows."""
         with patch('platform.system', return_value='Windows'):
@@ -339,6 +362,7 @@ class TestLeagueClient:
             assert "product_settings.yaml" in path
             assert "ProgramData" in path
 
+    @pytest.mark.unit
     def test_get_product_settings_path_unix(self, league_client):
         """Test getting product settings path on Unix systems."""
         with patch('platform.system', return_value='Darwin'):
@@ -347,6 +371,7 @@ class TestLeagueClient:
             assert ".config" in path  # Unix systems use .config directory
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_initialize_components(self, league_client):
         """Test lazy initialization of component controllers."""
         # Components should be None initially
@@ -370,6 +395,7 @@ class TestLeagueClient:
         assert league_client.get_league_replay_client() is replay_client
 
     @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_comprehensive_workflow(self, league_client):
         """Test a comprehensive workflow using multiple components."""
         # Mock all components

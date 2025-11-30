@@ -8,6 +8,7 @@ from lol_replay_recorder.models.lcu_request import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_read_lockfile_success():
     lockfile_content = "LeagueClient:12345:54321:mypassword:https"
 
@@ -20,6 +21,7 @@ async def test_read_lockfile_success():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_make_lcu_request_uses_lockfile_credentials():
     lockfile_content = "LeagueClient:12345:54321:mypassword:https"
 

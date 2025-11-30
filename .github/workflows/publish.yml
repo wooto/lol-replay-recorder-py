@@ -1,0 +1,87 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Install dependencies
+      run: uv sync
+
+    - name: Run tests
+      run: uv run pytest -m unit
+
+    - name: Run type checking
+      run: uv run mypy src/
+
+    - name: Run linting
+      run: uv run ruff check src/
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Configure git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Bump version
+      id: bump
+      run: |
+        current_version=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        echo "Current version: $current_version"
+
+        IFS='.' read -r major minor patch <<< "$current_version"
+        new_patch=$((patch + 1))
+        new_version="$major.$minor.$new_patch"
+        echo "New version: $new_version"
+
+        sed -i.bak "s/^version = \".*\"/version = \"$new_version\"/" pyproject.toml
+        sed -i.bak "s/__version__ = \".*\"/__version__ = \"$new_version\"/" src/lol_replay_recorder/__init__.py
+        rm pyproject.toml.bak src/lol_replay_recorder/__init__.py.bak
+
+        echo "version=$new_version" >> $GITHUB_OUTPUT
+
+    - name: Commit version bump
+      run: |
+        git add pyproject.toml src/lol_replay_recorder/__init__.py
+        git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}"
+        git push
+
+    - name: Create git tag
+      run: |
+        git tag "v${{ steps.bump.outputs.version }}"
+        git push origin "v${{ steps.bump.outputs.version }}"
+
+    - name: Build package
+      run: |
+        uv build
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        uv run twine upload dist/*

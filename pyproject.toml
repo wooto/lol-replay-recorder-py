@@ -17,12 +17,6 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS",
 ]
-
-[project.urls]
-Homepage = "https://github.com/wooto/lol-replay-recorder-py"
-Issues = "https://github.com/wooto/lol-replay-recorder-py/issues"
-Source = "https://github.com/wooto/lol-replay-recorder-py"
-
 dependencies = [
     "httpx>=0.27.0",
     "PyYAML>=6.0",
@@ -30,6 +24,11 @@ dependencies = [
     "pygetwindow>=0.0.9",
     "pywin32>=306; platform_system=='Windows'",
 ]
+
+[project.urls]
+Homepage = "https://github.com/wooto/lol-replay-recorder-py"
+Issues = "https://github.com/wooto/lol-replay-recorder-py/issues"
+Source = "https://github.com/wooto/lol-replay-recorder-py"
 
 
 [build-system]
@@ -64,4 +63,5 @@ dev = [
     "pygetwindow>=0.0.9",
     "types-PyYAML>=6.0.0",
     "types-PyAutoGUI>=0.9.0",
+    "twine>=6.2.0",
 ]

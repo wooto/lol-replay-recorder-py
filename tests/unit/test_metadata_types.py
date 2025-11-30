@@ -15,6 +15,7 @@ from lol_replay_recorder.models.metadata_types import (
 class TestSummonerTeamInfo:
     """Test SummonerTeamInfo TypedDict"""
 
+    @pytest.mark.unit
     def test_summoner_team_info_structure(self):
         """Test that SummonerTeamInfo has required fields"""
         def process_team_info(info: SummonerTeamInfo) -> SummonerTeamInfo:
@@ -45,6 +46,7 @@ class TestSummonerTeamInfo:
 class TestSummoner:
     """Test Summoner TypedDict"""
 
+    @pytest.mark.unit
     def test_summoner_structure(self):
         """Test that Summoner has required fields matching TypeScript version"""
         def process_summoner(summoner: Summoner) -> Summoner:
@@ -83,6 +85,7 @@ class TestSummoner:
         assert summoner["team_info"]["nickname"] == "TestNickname"
         assert summoner["team_info"]["team"]["name"] == "TestTeam"
 
+    @pytest.mark.unit
     def test_summoner_minimal_structure(self):
         """Test Summoner with minimal required fields"""
         team_info: SummonerTeamInfo = {
@@ -112,6 +115,7 @@ class TestSummoner:
 class TestTeamInfo:
     """Test TeamInfo TypedDict"""
 
+    @pytest.mark.unit
     def test_team_info_structure(self):
         """Test TeamInfo structure (keeping existing structure for compatibility)"""
         def process_team_info(info: TeamInfo) -> TeamInfo:
@@ -143,6 +147,7 @@ class TestTeamInfo:
 class TestPlayerInfo:
     """Test PlayerInfo TypedDict matching TypeScript version"""
 
+    @pytest.mark.unit
     def test_player_info_structure(self):
         """Test that PlayerInfo matches TypeScript structure with game_id and summoner"""
         def process_player_info(info: PlayerInfo) -> PlayerInfo:
@@ -179,6 +184,7 @@ class TestPlayerInfo:
         assert player_info["summoner"]["position"] == "JUNGLE"
         assert player_info["summoner"]["tier"] == "PLATINUM"
 
+    @pytest.mark.unit
     def test_player_info_integration(self):
         """Test PlayerInfo with nested structures"""
         # Create complete nested structure
@@ -218,6 +224,7 @@ class TestPlayerInfo:
 class TestSelectorData:
     """Test SelectorData TypedDict"""
 
+    @pytest.mark.unit
     def test_selector_data_structure(self):
         """Test SelectorData structure from TypeScript"""
         def process_selector_data(data: SelectorData) -> SelectorData:
@@ -229,6 +236,7 @@ class TestSelectorData:
 
         assert selector_data["game_id"] == "selector-game-456"
 
+    @pytest.mark.unit
     def test_selector_data_different_ids(self):
         """Test SelectorData with different game ID formats"""
         test_cases = [
@@ -246,6 +254,7 @@ class TestSelectorData:
 class TestTypeCompatibility:
     """Test type compatibility and integration"""
 
+    @pytest.mark.unit
     def test_metadata_types_compatibility(self):
         """Test that all new metadata types work together"""
         # Create a complete metadata structure
@@ -282,6 +291,7 @@ class TestTypeCompatibility:
         assert player_info["game_id"] == selector_data["game_id"]
         assert player_info["summoner"]["name"] == "CompatPlayer"
 
+    @pytest.mark.unit
     def test_type_annotation_usage(self):
         """Test that types can be used in function signatures"""
         def process_player_metadata(info: PlayerInfo) -> str:

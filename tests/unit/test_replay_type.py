@@ -42,6 +42,7 @@ from lol_replay_recorder.models.replay_type import (
 class TestRecordingProperties:
     """Test RecordingProperties TypedDict"""
 
+    @pytest.mark.unit
     def test_recording_properties_structure(self):
         """Test that RecordingProperties has required fields"""
         # Test that the TypedDict can be used as a type annotation
@@ -59,6 +60,7 @@ class TestRecordingProperties:
             }
             validate_typed_dict(RecordingProperties, invalid_props)
 
+    @pytest.mark.unit
     def test_recording_properties_valid(self):
         """Test valid RecordingProperties creation"""
         props: RecordingProperties = {
@@ -82,6 +84,7 @@ class TestRecordingProperties:
 class TestRenderProperties:
     """Test RenderProperties TypedDict"""
 
+    @pytest.mark.unit
     def test_render_properties_structure(self):
         """Test that RenderProperties has required fields"""
         def process_render(props: RenderProperties) -> RenderProperties:
@@ -96,6 +99,7 @@ class TestRenderProperties:
             }
             validate_typed_dict(RenderProperties, invalid_props)
 
+    @pytest.mark.unit
     def test_render_properties_valid(self):
         """Test valid RenderProperties creation"""
         props: RenderProperties = {
@@ -118,6 +122,7 @@ class TestRenderProperties:
 class TestGameData:
     """Test GameData TypedDict"""
 
+    @pytest.mark.unit
     def test_game_data_structure(self):
         """Test that GameData has required fields"""
         def process_game_data(data: GameData) -> GameData:
@@ -132,6 +137,7 @@ class TestGameData:
             }
             validate_typed_dict(GameData, invalid_data)
 
+    @pytest.mark.unit
     def test_game_data_valid(self):
         """Test valid GameData creation"""
         data: GameData = {
@@ -154,6 +160,7 @@ class TestGameData:
 class TestAdditionalTypes:
     """Test additional TypedDict classes"""
 
+    @pytest.mark.unit
     def test_replay_metadata(self):
         """Test ReplayMetadata structure"""
         metadata: ReplayMetadata = {
@@ -165,6 +172,7 @@ class TestAdditionalTypes:
         }
         assert metadata["title"] == "My Replay"
 
+    @pytest.mark.unit
     def test_processing_options(self):
         """Test ProcessingOptions structure"""
         options: ProcessingOptions = {
@@ -180,6 +188,7 @@ class TestAdditionalTypes:
 class TestLiveGameTypes:
     """Test live game data type definitions"""
 
+    @pytest.mark.unit
     def test_active_player_structure(self):
         """Test ActivePlayer TypedDict"""
         active_player: ActivePlayer = {
@@ -187,6 +196,7 @@ class TestLiveGameTypes:
         }
         assert active_player["error"] == "No active player found"
 
+    @pytest.mark.unit
     def test_item_structure(self):
         """Test Item TypedDict"""
         item: Item = {
@@ -203,6 +213,7 @@ class TestLiveGameTypes:
         assert item["itemID"] == 3031
         assert item["canUse"] is True
 
+    @pytest.mark.unit
     def test_keystone_structure(self):
         """Test Keystone TypedDict"""
         keystone: Keystone = {
@@ -214,6 +225,7 @@ class TestLiveGameTypes:
         assert keystone["id"] == 9951
         assert keystone["displayName"] == "Press the Attack"
 
+    @pytest.mark.unit
     def test_rune_tree_structure(self):
         """Test RuneTree TypedDict"""
         rune_tree: RuneTree = {
@@ -225,6 +237,7 @@ class TestLiveGameTypes:
         assert rune_tree["id"] == 8000
         assert rune_tree["displayName"] == "Precision"
 
+    @pytest.mark.unit
     def test_runes_structure(self):
         """Test Runes TypedDict"""
         keystone: Keystone = {
@@ -256,6 +269,7 @@ class TestLiveGameTypes:
         assert runes["keystone"]["id"] == 9951
         assert runes["primaryRuneTree"]["displayName"] == "Precision"
 
+    @pytest.mark.unit
     def test_scores_structure(self):
         """Test Scores TypedDict"""
         scores: Scores = {
@@ -269,6 +283,7 @@ class TestLiveGameTypes:
         assert scores["assists"] == 5
         assert scores["creepScore"] == 150
 
+    @pytest.mark.unit
     def test_summoner_spell_structure(self):
         """Test SummonerSpell TypedDict"""
         spell: SummonerSpell = {
@@ -278,6 +293,7 @@ class TestLiveGameTypes:
         }
         assert spell["displayName"] == "Flash"
 
+    @pytest.mark.unit
     def test_summoner_spells_structure(self):
         """Test SummonerSpells TypedDict"""
         spell1: SummonerSpell = {
@@ -299,6 +315,7 @@ class TestLiveGameTypes:
         assert spells["summonerSpellOne"]["displayName"] == "Flash"
         assert spells["summonerSpellTwo"]["displayName"] == "Ignite"
 
+    @pytest.mark.unit
     def test_player_structure(self):
         """Test Player TypedDict - comprehensive test"""
         # Create nested structures
@@ -383,6 +400,7 @@ class TestLiveGameTypes:
         assert player["scores"]["kills"] == 8
         assert player["summonerSpells"]["summonerSpellOne"]["displayName"] == "Flash"
 
+    @pytest.mark.unit
     def test_event_structure(self):
         """Test Event TypedDict"""
         event: Event = {
@@ -399,6 +417,7 @@ class TestLiveGameTypes:
         assert event["KillerName"] == "Player1"
         assert len(event["Assisters"]) == 2
 
+    @pytest.mark.unit
     def test_event_minimal_structure(self):
         """Test Event TypedDict with minimal required fields"""
         event: Event = {
@@ -409,6 +428,7 @@ class TestLiveGameTypes:
         assert event["EventID"] == 1002
         assert event["EventName"] == "LevelUp"
 
+    @pytest.mark.unit
     def test_events_structure(self):
         """Test Events TypedDict"""
         event1: Event = {
@@ -429,6 +449,7 @@ class TestLiveGameTypes:
         assert len(events["Events"]) == 2
         assert events["Events"][0]["EventName"] == "ChampionKill"
 
+    @pytest.mark.unit
     def test_game_details_structure(self):
         """Test GameDetails TypedDict"""
         game_details: GameDetails = {
@@ -442,6 +463,7 @@ class TestLiveGameTypes:
         assert game_details["gameTime"] == 1800
         assert game_details["mapName"] == "Summoner's Rift"
 
+    @pytest.mark.unit
     def test_live_game_data_structure(self):
         """Test LiveGameData TypedDict - integration test"""
         # Minimal structures for testing
@@ -530,6 +552,7 @@ class TestLiveGameTypes:
         assert live_game_data["allPlayers"][0]["championName"] == "Yasuo"
         assert live_game_data["gameData"]["gameMode"] == "CLASSIC"
 
+    @pytest.mark.unit
     def test_utility_types(self):
         """Test utility types Vector3 and ColorRGBA"""
         vector3: Vector3 = {
@@ -549,6 +572,7 @@ class TestLiveGameTypes:
         assert color["r"] == 1.0
         assert color["a"] == 0.8
 
+    @pytest.mark.unit
     def test_type_compatibility(self):
         """Test that new types are compatible with existing union types"""
         def process_live_game_input(data: LiveGameInput) -> LiveGameInput:

@@ -1,22 +1,28 @@
+import pytest
 from lol_replay_recorder.models.locale import Locale
 
 
+@pytest.mark.unit
 def test_locale_has_korean():
     assert Locale.ko_KR == "ko_KR"
 
 
+@pytest.mark.unit
 def test_locale_has_english_us():
     assert Locale.en_US == "en_US"
 
 
+@pytest.mark.unit
 def test_locale_has_japanese():
     assert Locale.ja_JP == "ja_JP"
 
 
+@pytest.mark.unit
 def test_locale_values_are_strings():
     assert isinstance(Locale.ko_KR.value, str)
 
 
+@pytest.mark.unit
 def test_locale_has_all_expected_locales():
     expected_locales = {
         "ja_JP", "ko_KR", "ar_AE", "cs_CZ", "de_DE", "el_GR",
